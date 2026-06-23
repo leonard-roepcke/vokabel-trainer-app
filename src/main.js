@@ -37,6 +37,10 @@ const els = {
   addListForm: document.getElementById("add-list-form"),
   inputListName: document.getElementById("input-list-name"),
   cancelList: document.getElementById("cancel-list"),
+  dialogRenameList: document.getElementById("dialog-rename-list"),
+  renameListForm: document.getElementById("rename-list-form"),
+  inputRenameList: document.getElementById("input-rename-list"),
+  cancelRenameList: document.getElementById("cancel-rename-list"),
   dialogVocab: document.getElementById("dialog-vocab"),
   vocabForm: document.getElementById("vocab-form"),
   vocabDialogTitle: document.getElementById("vocab-dialog-title"),
@@ -48,14 +52,11 @@ const els = {
   flipBoth: document.getElementById("flip-both"),
   cancelVocab: document.getElementById("cancel-vocab"),
   learnArea: document.getElementById("learn-area"),
-  btnBackLearn: document.getElementById("btn-back-learn"),
   flashcard: document.getElementById("flashcard"),
   cardFront: document.getElementById("card-front"),
   cardBack: document.getElementById("card-back"),
   cardIndex: document.getElementById("card-index"),
   cardTotal: document.getElementById("card-total"),
-  btnPrev: document.getElementById("btn-prev"),
-  btnShuffle: document.getElementById("btn-shuffle"),
   btnKnew: document.getElementById("btn-knew"),
   btnUnknown: document.getElementById("btn-unknown"),
   learnCardActions: document.getElementById("learn-card-actions"),
@@ -193,6 +194,31 @@ function showListHeader(title) {
   els.headerSimple.classList.add("hidden");
   els.headerListNav.classList.remove("hidden");
   els.listHeaderTitle.textContent = title;
+}
+
+function openRenameListDialog() {
+  if (!currentListId) return;
+  const list = getList(currentListId);
+  if (!list) return;
+
+  els.inputRenameList.value = list.name;
+  els.dialogRenameList.showModal();
+  positionDialogForKeyboard(els.dialogRenameList);
+  els.inputRenameList.focus();
+  els.inputRenameList.select();
+}
+
+function renameList(id, name) {
+  const list = getList(id);
+  if (!list) return;
+
+  const trimmed = name.trim();
+  if (!trimmed) return;
+
+  list.name = trimmed;
+  saveData();
+  showListHeader(list.name);
+  renderLists();
 }
 
 function openConfirmDialog({ title, message, confirmLabel = "Löschen" }) {
@@ -418,6 +444,13 @@ function deleteVocab(listId, vocabId) {
   renderLists();
 }
 
+function shuffleArray(items) {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+}
+
 function startLearn(listId) {
   const list = getList(listId);
   if (!list) return;
@@ -427,6 +460,7 @@ function startLearn(listId) {
 
   learnListId = listId;
   learnOrder = dueVocabs.map((v) => v.id);
+  shuffleArray(learnOrder);
   learnIndex = 0;
 
   els.listsOverview.classList.add("hidden");
@@ -498,22 +532,6 @@ function answerCard(knew) {
   showLearnState();
 }
 
-function prevCard() {
-  if (learnOrder.length === 0) return;
-  learnIndex = (learnIndex - 1 + learnOrder.length) % learnOrder.length;
-  showCard();
-}
-
-function shuffleCards() {
-  if (learnOrder.length === 0) return;
-  for (let i = learnOrder.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [learnOrder[i], learnOrder[j]] = [learnOrder[j], learnOrder[i]];
-  }
-  learnIndex = 0;
-  showCard();
-}
-
 els.btnAddList.addEventListener("click", () => {
   els.inputListName.value = "";
   els.dialogAddList.showModal();
@@ -527,6 +545,17 @@ els.addListForm.addEventListener("submit", (e) => {
   addList(els.inputListName.value);
   els.dialogAddList.close();
 });
+
+els.cancelRenameList.addEventListener("click", () => els.dialogRenameList.close());
+
+els.renameListForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (!currentListId) return;
+  renameList(currentListId, els.inputRenameList.value);
+  els.dialogRenameList.close();
+});
+
+els.listHeaderTitle.addEventListener("click", openRenameListDialog);
 
 els.btnHeaderBack.addEventListener("click", showListsOverview);
 
@@ -589,15 +618,11 @@ els.vocabList.addEventListener("click", (e) => {
   if (del) deleteVocab(currentListId, del.dataset.id);
 });
 
-els.btnBackLearn.addEventListener("click", showListsOverview);
-
 els.flashcard.addEventListener("click", () => {
   els.flashcard.classList.toggle("flipped");
 });
 
 els.btnKnew.addEventListener("click", () => answerCard(true));
 els.btnUnknown.addEventListener("click", () => answerCard(false));
-els.btnPrev.addEventListener("click", prevCard);
-els.btnShuffle.addEventListener("click", shuffleCards);
 
 showListsOverview();

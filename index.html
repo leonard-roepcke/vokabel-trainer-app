@@ -22,7 +22,12 @@
             class="icon-btn"
             aria-label="Zurück zu Listen"
           ></button>
-          <h1 id="list-header-title"></h1>
+          <button
+            type="button"
+            id="list-header-title"
+            class="list-header-title-btn"
+            aria-label="Listenname bearbeiten"
+          ></button>
           <button
             type="button"
             id="btn-header-delete-list"
@@ -59,9 +64,6 @@
         </div>
 
         <div id="learn-area" class="hidden">
-          <button type="button" id="btn-back-learn" class="back-btn">
-            ← Listen
-          </button>
           <p class="progress" id="learn-progress">
             <span id="card-index">1</span> / <span id="card-total">0</span>
           </p>
@@ -86,8 +88,6 @@
           <p id="learn-flip-hint" class="hint">Klicke auf die Karte zum Umdrehen</p>
 
           <div id="learn-card-actions" class="learn-actions">
-            <button type="button" id="btn-prev">← Zurück</button>
-            <button type="button" id="btn-shuffle">Mischen</button>
             <button type="button" id="btn-knew" class="btn-knew">Wusste ich</button>
             <button type="button" id="btn-unknown" class="btn-unknown">
               Wusste ich nicht
@@ -99,6 +99,27 @@
         </div>
       </main>
     </div>
+
+    <dialog id="dialog-rename-list">
+      <form id="rename-list-form" method="dialog">
+        <h2>Liste umbenennen</h2>
+        <label>
+          Name
+          <input
+            type="text"
+            id="input-rename-list"
+            required
+            placeholder="Listenname"
+          />
+        </label>
+        <div class="dialog-actions">
+          <button type="button" id="cancel-rename-list" class="btn-secondary">
+            Abbrechen
+          </button>
+          <button type="submit" class="btn-primary">Speichern</button>
+        </div>
+      </form>
+    </dialog>
 
     <dialog id="dialog-add-list">
       <form id="add-list-form" method="dialog">
