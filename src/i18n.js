@@ -2,6 +2,7 @@ const STRINGS = {
   de: {
     appTitle: "Vokabeltrainer",
     backToLists: "Zurück zu Listen",
+    backToHome: "Zur Startseite",
     editListName: "Listenname bearbeiten",
     deleteList: "Liste löschen",
     settings: "Einstellungen",
@@ -73,6 +74,7 @@ const STRINGS = {
   en: {
     appTitle: "Vocabulary Trainer",
     backToLists: "Back to lists",
+    backToHome: "Back to home",
     editListName: "Edit list name",
     deleteList: "Delete list",
     settings: "Settings",

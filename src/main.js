@@ -15,6 +15,7 @@ const LEARN_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><pa
 const EDIT_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
 const DELETE_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 const BACK_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>`;
+const HOME_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`;
 const SETTINGS_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87a.49.49 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>`;
 
 let settings = loadSettings();
@@ -90,7 +91,7 @@ const els = {
   confirmOk: document.getElementById("confirm-ok"),
 };
 
-els.btnHeaderBack.innerHTML = BACK_ICON;
+setHeaderBack();
 els.btnHeaderDeleteList.innerHTML = DELETE_ICON;
 els.btnSettings.innerHTML = SETTINGS_ICON;
 
@@ -242,12 +243,22 @@ function showSimpleHeader(title) {
   setAppTitle(title);
 }
 
+function setHeaderBack({ icon = BACK_ICON, ariaKey = "backToLists" } = {}) {
+  els.btnHeaderBack.innerHTML = icon;
+  els.btnHeaderBack.setAttribute("aria-label", t(ariaKey));
+}
+
 function showNavHeader(title, { showDelete = false, editableTitle = false } = {}) {
   els.headerSimple.classList.add("hidden");
   els.headerListNav.classList.remove("hidden");
   els.listHeaderTitle.textContent = title;
   els.btnHeaderDeleteList.classList.toggle("hidden", !showDelete);
   els.listHeaderTitle.classList.toggle("list-header-title-readonly", !editableTitle);
+}
+
+function showLearnHeader(title) {
+  setHeaderBack({ icon: HOME_ICON, ariaKey: "backToHome" });
+  showNavHeader(title, { showDelete: false, editableTitle: true });
 }
 
 function applySettings() {
@@ -267,7 +278,7 @@ function refreshVisibleUi() {
   if (!els.settingsArea.classList.contains("hidden")) showNavHeader(t("settings"));
   if (!els.learnArea.classList.contains("hidden") && learnListId) {
     const list = getList(learnListId);
-    if (list) showSimpleHeader(list.name);
+    if (list) showLearnHeader(list.name);
   } else if (
     els.headerSimple.classList.contains("hidden") === false &&
     els.listsOverview.classList.contains("hidden") === false
@@ -543,6 +554,7 @@ function showSettings() {
   learnListId = null;
   hideAllViews();
   els.settingsArea.classList.remove("hidden");
+  setHeaderBack();
   showNavHeader(t("settings"));
 }
 
@@ -553,6 +565,7 @@ function openList(id) {
 
   hideAllViews();
   els.listDetail.classList.remove("hidden");
+  setHeaderBack();
   showNavHeader(list.name, { showDelete: true, editableTitle: true });
   renderVocabs();
 }
@@ -703,19 +716,23 @@ function startLearn(listId) {
 
   hideAllViews();
   els.learnArea.classList.remove("hidden");
-  showSimpleHeader(list.name);
+  showLearnHeader(list.name);
   showLearnState();
 }
 
 function showLearnState() {
   const hasCards = learnOrder.length > 0;
-  els.flashcard.classList.toggle("hidden", !hasCards);
-  els.learnCardActions.classList.toggle("hidden", !hasCards);
-  els.learnFlipHint.classList.toggle("hidden", !hasCards);
-  els.learnProgress.classList.toggle("hidden", !hasCards);
-  els.learnDone.classList.toggle("hidden", hasCards);
+  if (!hasCards) {
+    showListsOverview();
+    return;
+  }
 
-  if (hasCards) showCard();
+  els.flashcard.classList.remove("hidden");
+  els.learnCardActions.classList.remove("hidden");
+  els.learnFlipHint.classList.remove("hidden");
+  els.learnProgress.classList.remove("hidden");
+  els.learnDone.classList.add("hidden");
+  showCard();
 }
 
 function getLearnVocabs() {
