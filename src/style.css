@@ -34,32 +34,10 @@ header {
 }
 
 h1 {
-  margin: 0 0 1rem;
+  margin: 0;
   font-size: 1.75rem;
 }
 
-nav {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.nav-btn {
-  padding: 0.5rem 1.25rem;
-  border: 2px solid #d4d4d8;
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
-  font-size: 0.95rem;
-}
-
-.nav-btn.active {
-  border-color: #3b82f6;
-  background: #3b82f6;
-  color: #fff;
-}
-
-.view.hidden,
 .hidden {
   display: none;
 }
@@ -75,6 +53,10 @@ h2 {
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+#list-detail .section-header {
+  justify-content: flex-end;
 }
 
 .btn-primary {
@@ -155,22 +137,71 @@ h2 {
   padding: 0.75rem 0;
 }
 
-button.card-body {
-  cursor: pointer;
-}
-
-.list-open strong {
+.list-info strong {
   display: block;
   font-size: 1rem;
 }
 
-.list-open span {
+.list-info span {
   color: #71717a;
   font-size: 0.85rem;
 }
 
-.list-open:hover strong {
-  color: #3b82f6;
+.list-actions,
+.vocab-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: #f4f4f5;
+  color: #3f3f46;
+  cursor: pointer;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: #e4e4e7;
+  color: #18181b;
+}
+
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.icon-btn.delete-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.icon-btn.delete-btn:hover:not(:disabled) {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.icon-btn.learn-btn {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.icon-btn.learn-btn:hover:not(:disabled) {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.icon {
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 .vocab-text strong {
@@ -193,52 +224,6 @@ button.card-body {
   color: #1d4ed8;
   font-size: 0.7rem;
   font-weight: 500;
-}
-
-.vocab-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex-shrink: 0;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: none;
-  border-radius: 8px;
-  background: #f4f4f5;
-  color: #3f3f46;
-  cursor: pointer;
-}
-
-.icon-btn:hover {
-  background: #e4e4e7;
-  color: #18181b;
-}
-
-.icon {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
-.delete-btn {
-  padding: 0.35rem 0.6rem;
-  border: none;
-  border-radius: 8px;
-  background: #fee2e2;
-  color: #b91c1c;
-  font-size: 0.85rem;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.delete-btn:hover {
-  background: #fecaca;
 }
 
 .hint {
@@ -286,6 +271,7 @@ button.card-body {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  padding-bottom: 2.5rem;
   border-radius: var(--card-radius);
   background: #fff;
   box-shadow: var(--card-shadow);
@@ -298,11 +284,15 @@ button.card-body {
 }
 
 .flashcard .label {
+  position: absolute;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #71717a;
-  margin-bottom: 0.5rem;
+  text-align: center;
 }
 
 .flashcard p {
@@ -352,6 +342,11 @@ dialog {
   max-width: calc(100vw - 2rem);
   width: 360px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  margin: auto;
+  top: max(1rem, env(safe-area-inset-top, 0px));
+  bottom: auto;
+  overflow-y: auto;
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0px));
 }
 
 dialog::backdrop {
@@ -419,8 +414,4 @@ dialog input[type="text"]:focus {
   gap: 0.5rem;
   justify-content: flex-end;
   margin-top: 1rem;
-}
-
-#learn-pick-list h2 {
-  margin-bottom: 1rem;
 }

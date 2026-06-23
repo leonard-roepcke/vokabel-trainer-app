@@ -1,12 +1,15 @@
 const STORAGE_KEY = "vokabel-trainer-data";
 const OLD_STORAGE_KEY = "vokabel-trainer-vocabs";
+const DEFAULT_TITLE = "Vokabeltrainer";
 
 const FLIP_LABELS = {
   front: "Immer vorne",
   both: "Beidseitig",
 };
 
+const LEARN_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3 1 9l4 2.18V17c0 2.21 3.13 4 7 4s7-1.79 7-4v-5.82L23 9 12 3zm0 2.18L19.35 9 12 12.82 4.65 9 12 5.18zM5 17v-4.73l7 3.82 7-3.82V17c0 1.1-2.62 2-7 2s-7-.9-7-2z"/></svg>`;
 const EDIT_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+const DELETE_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 
 let data = loadData();
 let currentListId = null;
@@ -15,14 +18,11 @@ let learnOrder = [];
 let learnIndex = 0;
 
 const els = {
-  navBtns: document.querySelectorAll(".nav-btn"),
-  viewManage: document.getElementById("view-manage"),
-  viewLearn: document.getElementById("view-learn"),
+  appTitle: document.getElementById("app-title"),
   listsOverview: document.getElementById("lists-overview"),
   listDetail: document.getElementById("list-detail"),
   listsList: document.getElementById("lists-list"),
   listsEmpty: document.getElementById("lists-empty"),
-  listTitle: document.getElementById("list-title"),
   vocabList: document.getElementById("vocab-list"),
   vocabsEmpty: document.getElementById("vocabs-empty"),
   btnAddList: document.getElementById("btn-add-list"),
@@ -42,13 +42,8 @@ const els = {
   flipFront: document.getElementById("flip-front"),
   flipBoth: document.getElementById("flip-both"),
   cancelVocab: document.getElementById("cancel-vocab"),
-  learnPickList: document.getElementById("learn-pick-list"),
-  learnLists: document.getElementById("learn-lists"),
-  learnListsEmpty: document.getElementById("learn-lists-empty"),
-  learnEmpty: document.getElementById("learn-empty"),
   learnArea: document.getElementById("learn-area"),
   btnBackLearn: document.getElementById("btn-back-learn"),
-  learnListName: document.getElementById("learn-list-name"),
   flashcard: document.getElementById("flashcard"),
   cardFront: document.getElementById("card-front"),
   cardBack: document.getElementById("card-back"),
@@ -116,6 +111,10 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function setAppTitle(title) {
+  els.appTitle.textContent = title;
+}
+
 function getSelectedFlipMode() {
   return els.flipBoth.checked ? "both" : "front";
 }
@@ -124,6 +123,36 @@ function setFlipModeRadio(mode) {
   const normalized = normalizeFlipMode(mode);
   els.flipFront.checked = normalized === "front";
   els.flipBoth.checked = normalized === "both";
+}
+
+function positionDialogForKeyboard(dialog) {
+  const vv = window.visualViewport;
+  if (!vv) return;
+
+  const update = () => {
+    const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
+    if (keyboardHeight > 50) {
+      dialog.style.top = `${Math.max(vv.offsetTop + 8, 8)}px`;
+      dialog.style.maxHeight = `${vv.height - 16}px`;
+    } else {
+      dialog.style.top = "";
+      dialog.style.maxHeight = "";
+    }
+  };
+
+  vv.addEventListener("resize", update);
+  vv.addEventListener("scroll", update);
+  dialog.addEventListener(
+    "close",
+    () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+      dialog.style.top = "";
+      dialog.style.maxHeight = "";
+    },
+    { once: true },
+  );
+  update();
 }
 
 function openVocabDialog(vocab = null) {
@@ -144,26 +173,17 @@ function openVocabDialog(vocab = null) {
   }
 
   els.dialogVocab.showModal();
+  positionDialogForKeyboard(els.dialogVocab);
   els.inputFront.focus();
-}
-
-function switchView(view) {
-  els.navBtns.forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.view === view);
-  });
-  els.viewManage.classList.toggle("hidden", view !== "manage");
-  els.viewLearn.classList.toggle("hidden", view !== "learn");
-
-  if (view === "learn") {
-    learnListId = null;
-    renderLearnListPicker();
-  }
 }
 
 function showListsOverview() {
   currentListId = null;
+  learnListId = null;
   els.listsOverview.classList.remove("hidden");
   els.listDetail.classList.add("hidden");
+  els.learnArea.classList.add("hidden");
+  setAppTitle(DEFAULT_TITLE);
   renderLists();
 }
 
@@ -174,7 +194,8 @@ function openList(id) {
 
   els.listsOverview.classList.add("hidden");
   els.listDetail.classList.remove("hidden");
-  els.listTitle.textContent = list.name;
+  els.learnArea.classList.add("hidden");
+  setAppTitle(list.name);
   renderVocabs();
 }
 
@@ -185,12 +206,23 @@ function renderLists() {
   data.lists.forEach((list) => {
     const li = document.createElement("li");
     li.className = "card list-card";
+    const learnDisabled = list.vocabs.length === 0 ? "disabled" : "";
     li.innerHTML = `
-      <button type="button" class="card-body list-open" data-id="${list.id}">
+      <div class="card-body list-info">
         <strong>${escapeHtml(list.name)}</strong>
         <span>${list.vocabs.length} Vokabel${list.vocabs.length === 1 ? "" : "n"}</span>
-      </button>
-      <button type="button" class="delete-btn" data-id="${list.id}" aria-label="Liste löschen">Löschen</button>
+      </div>
+      <div class="list-actions">
+        <button type="button" class="icon-btn learn-btn" data-id="${list.id}" aria-label="Lernen" ${learnDisabled}>
+          ${LEARN_ICON}
+        </button>
+        <button type="button" class="icon-btn edit-btn" data-id="${list.id}" aria-label="Bearbeiten">
+          ${EDIT_ICON}
+        </button>
+        <button type="button" class="icon-btn delete-btn" data-id="${list.id}" aria-label="Löschen">
+          ${DELETE_ICON}
+        </button>
+      </div>
     `;
     els.listsList.appendChild(li);
   });
@@ -216,7 +248,9 @@ function renderVocabs() {
         <button type="button" class="icon-btn edit-btn" data-id="${vocab.id}" aria-label="Vokabel bearbeiten">
           ${EDIT_ICON}
         </button>
-        <button type="button" class="delete-btn" data-id="${vocab.id}">Löschen</button>
+        <button type="button" class="icon-btn delete-btn" data-id="${vocab.id}" aria-label="Vokabel löschen">
+          ${DELETE_ICON}
+        </button>
       </div>
     `;
     els.vocabList.appendChild(li);
@@ -236,7 +270,7 @@ function addList(name) {
 function deleteList(id) {
   data.lists = data.lists.filter((l) => l.id !== id);
   saveData();
-  if (currentListId === id) showListsOverview();
+  if (currentListId === id || learnListId === id) showListsOverview();
   else renderLists();
 }
 
@@ -280,28 +314,6 @@ function deleteVocab(listId, vocabId) {
   renderLists();
 }
 
-function renderLearnListPicker() {
-  els.learnPickList.classList.remove("hidden");
-  els.learnEmpty.classList.add("hidden");
-  els.learnArea.classList.add("hidden");
-
-  const withVocabs = data.lists.filter((l) => l.vocabs.length > 0);
-  els.learnLists.innerHTML = "";
-  els.learnListsEmpty.classList.toggle("hidden", withVocabs.length > 0);
-
-  withVocabs.forEach((list) => {
-    const li = document.createElement("li");
-    li.className = "card list-card";
-    li.innerHTML = `
-      <button type="button" class="card-body list-open learn-pick" data-id="${list.id}">
-        <strong>${escapeHtml(list.name)}</strong>
-        <span>${list.vocabs.length} Vokabel${list.vocabs.length === 1 ? "" : "n"}</span>
-      </button>
-    `;
-    els.learnLists.appendChild(li);
-  });
-}
-
 function startLearn(listId) {
   const list = getList(listId);
   if (!list || list.vocabs.length === 0) return;
@@ -310,10 +322,10 @@ function startLearn(listId) {
   learnOrder = list.vocabs.map((v) => v.id);
   learnIndex = 0;
 
-  els.learnPickList.classList.add("hidden");
-  els.learnEmpty.classList.add("hidden");
+  els.listsOverview.classList.add("hidden");
+  els.listDetail.classList.add("hidden");
   els.learnArea.classList.remove("hidden");
-  els.learnListName.textContent = list.name;
+  setAppTitle(list.name);
   showCard();
 }
 
@@ -363,10 +375,6 @@ function shuffleCards() {
   showCard();
 }
 
-els.navBtns.forEach((btn) => {
-  btn.addEventListener("click", () => switchView(btn.dataset.view));
-});
-
 els.btnAddList.addEventListener("click", () => {
   els.inputListName.value = "";
   els.dialogAddList.showModal();
@@ -406,9 +414,14 @@ els.vocabForm.addEventListener("submit", (e) => {
 });
 
 els.listsList.addEventListener("click", (e) => {
-  const open = e.target.closest(".list-open");
-  if (open) {
-    openList(open.dataset.id);
+  const learn = e.target.closest(".learn-btn");
+  if (learn && !learn.disabled) {
+    startLearn(learn.dataset.id);
+    return;
+  }
+  const edit = e.target.closest(".edit-btn");
+  if (edit) {
+    openList(edit.dataset.id);
     return;
   }
   const del = e.target.closest(".delete-btn");
@@ -427,12 +440,7 @@ els.vocabList.addEventListener("click", (e) => {
   if (del) deleteVocab(currentListId, del.dataset.id);
 });
 
-els.learnLists.addEventListener("click", (e) => {
-  const pick = e.target.closest(".learn-pick");
-  if (pick) startLearn(pick.dataset.id);
-});
-
-els.btnBackLearn.addEventListener("click", renderLearnListPicker);
+els.btnBackLearn.addEventListener("click", showListsOverview);
 
 els.flashcard.addEventListener("click", () => {
   els.flashcard.classList.toggle("flipped");

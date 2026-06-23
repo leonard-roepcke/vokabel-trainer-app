@@ -12,95 +12,71 @@
   <body>
     <div id="app">
       <header>
-        <h1>Vokabeltrainer</h1>
-        <nav>
-          <button type="button" class="nav-btn active" data-view="manage">
-            Vokabeln
-          </button>
-          <button type="button" class="nav-btn" data-view="learn">Lernen</button>
-        </nav>
+        <h1 id="app-title">Vokabeltrainer</h1>
       </header>
 
       <main>
-        <section id="view-manage" class="view">
-          <div id="lists-overview">
-            <div class="section-header">
-              <h2>Listen</h2>
-              <button type="button" id="btn-add-list" class="btn-primary">
-                + Liste
-              </button>
-            </div>
-            <ul id="lists-list" class="card-stack"></ul>
-            <p id="lists-empty" class="hint">
-              Noch keine Listen. Lege eine neue an.
-            </p>
-          </div>
-
-          <div id="list-detail" class="hidden">
-            <button type="button" id="btn-back-lists" class="back-btn">
-              ← Listen
+        <div id="lists-overview">
+          <div class="section-header">
+            <h2>Listen</h2>
+            <button type="button" id="btn-add-list" class="btn-primary">
+              + Liste
             </button>
-            <div class="section-header">
-              <h2 id="list-title"></h2>
-              <button type="button" id="btn-add-vocab" class="btn-primary">
-                + Vokabel
-              </button>
-            </div>
-            <ul id="vocab-list" class="card-stack"></ul>
-            <p id="vocabs-empty" class="hint hidden">
-              Noch keine Vokabeln in dieser Liste.
-            </p>
           </div>
-        </section>
+          <ul id="lists-list" class="card-stack"></ul>
+          <p id="lists-empty" class="hint">
+            Noch keine Listen. Lege eine neue an.
+          </p>
+        </div>
 
-        <section id="view-learn" class="view hidden">
-          <div id="learn-pick-list">
-            <h2>Liste zum Lernen wählen</h2>
-            <ul id="learn-lists" class="card-stack"></ul>
-            <p id="learn-lists-empty" class="hint hidden">
-              Keine Listen mit Vokabeln vorhanden.
-            </p>
-          </div>
-
-          <div id="learn-empty" class="hint hidden">
-            <p>Keine Vokabeln in dieser Liste.</p>
-          </div>
-
-          <div id="learn-area" class="hidden">
-            <button type="button" id="btn-back-learn" class="back-btn">
-              ← Listen
+        <div id="list-detail" class="hidden">
+          <button type="button" id="btn-back-lists" class="back-btn">
+            ← Listen
+          </button>
+          <div class="section-header">
+            <button type="button" id="btn-add-vocab" class="btn-primary">
+              + Vokabel
             </button>
-            <p class="progress">
-              <span id="learn-list-name"></span> ·
-              <span id="card-index">1</span> / <span id="card-total">0</span>
-            </p>
+          </div>
+          <ul id="vocab-list" class="card-stack"></ul>
+          <p id="vocabs-empty" class="hint hidden">
+            Noch keine Vokabeln in dieser Liste.
+          </p>
+        </div>
 
-            <button
-              type="button"
-              id="flashcard"
-              class="card flashcard"
-              aria-label="Karte umdrehen"
-            >
-              <div class="flashcard-inner">
-                <div class="card-face flashcard-front">
-                  <span class="label">Vorderseite</span>
-                  <p id="card-front"></p>
-                </div>
-                <div class="card-face flashcard-back">
-                  <span class="label">Rückseite</span>
-                  <p id="card-back"></p>
-                </div>
+        <div id="learn-area" class="hidden">
+          <button type="button" id="btn-back-learn" class="back-btn">
+            ← Listen
+          </button>
+          <p class="progress">
+            <span id="card-index">1</span> / <span id="card-total">0</span>
+          </p>
+
+          <button
+            type="button"
+            id="flashcard"
+            class="card flashcard"
+            aria-label="Karte umdrehen"
+          >
+            <div class="flashcard-inner">
+              <div class="card-face flashcard-front">
+                <p id="card-front"></p>
+                <span class="label">Vorderseite</span>
               </div>
-            </button>
-            <p class="hint">Klicke auf die Karte zum Umdrehen</p>
-
-            <div class="learn-actions">
-              <button type="button" id="btn-prev">← Zurück</button>
-              <button type="button" id="btn-shuffle">Mischen</button>
-              <button type="button" id="btn-next">Weiter →</button>
+              <div class="card-face flashcard-back">
+                <p id="card-back"></p>
+                <span class="label">Rückseite</span>
+              </div>
             </div>
+          </button>
+          <p class="hint">Klicke auf die Karte zum Umdrehen</p>
+
+          <div class="learn-actions">
+            <button type="button" id="btn-prev">← Zurück</button>
+            <button type="button" id="btn-shuffle">Mischen</button>
+            <button type="button" id="btn-next">Weiter →</button>
           </div>
-        </section>
+        </div>
       </main>
     </div>
 
