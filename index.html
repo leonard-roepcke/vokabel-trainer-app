@@ -41,9 +41,14 @@
         <div id="lists-overview">
           <div class="section-header">
             <h2>Listen</h2>
-            <button type="button" id="btn-add-list" class="btn-primary">
-              + Liste
-            </button>
+            <div class="section-header-actions">
+              <button type="button" id="btn-import-list" class="btn-secondary">
+                Liste importieren
+              </button>
+              <button type="button" id="btn-add-list" class="btn-primary">
+                + Liste
+              </button>
+            </div>
           </div>
           <ul id="lists-list" class="card-stack"></ul>
           <p id="lists-empty" class="hint">
@@ -53,6 +58,9 @@
 
         <div id="list-detail" class="hidden">
           <div class="section-header">
+            <button type="button" id="btn-share-list" class="btn-secondary">
+              Liste teilen
+            </button>
             <button type="button" id="btn-add-vocab" class="btn-primary">
               + Vokabel
             </button>
@@ -99,6 +107,28 @@
         </div>
       </main>
     </div>
+
+    <dialog id="dialog-import-list">
+      <form id="import-list-form" method="dialog">
+        <h2>Liste importieren</h2>
+        <label>
+          Listendaten einfügen
+          <textarea
+            id="input-import-list"
+            required
+            rows="8"
+            placeholder='{"name":"Englisch","vocabs":[...]}'
+          ></textarea>
+        </label>
+        <p id="import-error" class="dialog-error hidden"></p>
+        <div class="dialog-actions">
+          <button type="button" id="cancel-import-list" class="btn-secondary">
+            Abbrechen
+          </button>
+          <button type="submit" class="btn-primary">Importieren</button>
+        </div>
+      </form>
+    </dialog>
 
     <dialog id="dialog-rename-list">
       <form id="rename-list-form" method="dialog">

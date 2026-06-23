@@ -32,7 +32,14 @@ const els = {
   vocabList: document.getElementById("vocab-list"),
   vocabsEmpty: document.getElementById("vocabs-empty"),
   btnAddList: document.getElementById("btn-add-list"),
+  btnImportList: document.getElementById("btn-import-list"),
+  btnShareList: document.getElementById("btn-share-list"),
   btnAddVocab: document.getElementById("btn-add-vocab"),
+  dialogImportList: document.getElementById("dialog-import-list"),
+  importListForm: document.getElementById("import-list-form"),
+  inputImportList: document.getElementById("input-import-list"),
+  importError: document.getElementById("import-error"),
+  cancelImportList: document.getElementById("cancel-import-list"),
   dialogAddList: document.getElementById("dialog-add-list"),
   addListForm: document.getElementById("add-list-form"),
   inputListName: document.getElementById("input-list-name"),
@@ -206,6 +213,124 @@ function openRenameListDialog() {
   positionDialogForKeyboard(els.dialogRenameList);
   els.inputRenameList.focus();
   els.inputRenameList.select();
+}
+
+function cloneListForExport(list) {
+  return {
+    id: list.id,
+    name: list.name,
+    vocabs: list.vocabs.map((vocab) => ({
+      id: vocab.id,
+      front: vocab.front,
+      back: vocab.back,
+      flipMode: normalizeFlipMode(vocab.flipMode),
+      reviewInterval: vocab.reviewInterval,
+      nextReview: vocab.nextReview,
+    })),
+  };
+}
+
+function serializeListForExport(list) {
+  return JSON.stringify(cloneListForExport(list), null, 2);
+}
+
+function parseImportedListText(text) {
+  let parsed;
+  try {
+    parsed = JSON.parse(text.trim());
+  } catch {
+    throw new Error("Ungültiges JSON. Bitte das komplette Listendaten-Format einfügen.");
+  }
+
+  let listData;
+  if (parsed?.lists && Array.isArray(parsed.lists)) {
+    if (parsed.lists.length !== 1) {
+      throw new Error("Es muss genau eine Liste im Datenformat enthalten sein.");
+    }
+    listData = parsed.lists[0];
+  } else if (parsed?.name && Array.isArray(parsed.vocabs)) {
+    listData = parsed;
+  } else {
+    throw new Error("Unbekanntes Format. Erwartet wird eine Liste mit name und vocabs.");
+  }
+
+  if (!String(listData.name ?? "").trim()) {
+    throw new Error("Der Listenname fehlt.");
+  }
+
+  if (!Array.isArray(listData.vocabs) || listData.vocabs.length === 0) {
+    throw new Error("Die Liste enthält keine Vokabeln.");
+  }
+
+  const vocabs = listData.vocabs
+    .map((vocab) => {
+      const front = String(vocab?.front ?? "").trim();
+      const back = String(vocab?.back ?? "").trim();
+      if (!front || !back) return null;
+
+      const imported = {
+        id: crypto.randomUUID(),
+        front,
+        back,
+        flipMode: normalizeFlipMode(vocab.flipMode),
+        reviewInterval: vocab.reviewInterval,
+        nextReview: vocab.nextReview ?? null,
+      };
+      normalizeVocab(imported);
+      return imported;
+    })
+    .filter(Boolean);
+
+  if (vocabs.length === 0) {
+    throw new Error("Keine gültigen Vokabeln gefunden.");
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    name: String(listData.name).trim(),
+    vocabs,
+  };
+}
+
+function importListFromText(text) {
+  const list = parseImportedListText(text);
+  data.lists.push(list);
+  saveData();
+  renderLists();
+  return list;
+}
+
+async function shareCurrentList() {
+  if (!currentListId) return;
+  const list = getList(currentListId);
+  if (!list) return;
+
+  const text = serializeListForExport(list);
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: list.name, text });
+      return;
+    } catch (error) {
+      if (error.name === "AbortError") return;
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    window.alert("Die Listendaten wurden in die Zwischenablage kopiert.");
+  } catch {
+    window.alert("Die Listendaten konnten nicht geteilt werden. Bitte versuche es erneut.");
+  }
+}
+
+function openImportListDialog() {
+  els.inputImportList.value = "";
+  els.importError.textContent = "";
+  els.importError.classList.add("hidden");
+  els.dialogImportList.showModal();
+  positionDialogForKeyboard(els.dialogImportList);
+  els.inputImportList.focus();
 }
 
 function renameList(id, name) {
@@ -538,6 +663,24 @@ els.btnAddList.addEventListener("click", () => {
   els.inputListName.focus();
 });
 
+els.btnImportList.addEventListener("click", openImportListDialog);
+
+els.cancelImportList.addEventListener("click", () => els.dialogImportList.close());
+
+els.importListForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  els.importError.textContent = "";
+  els.importError.classList.add("hidden");
+
+  try {
+    importListFromText(els.inputImportList.value);
+    els.dialogImportList.close();
+  } catch (error) {
+    els.importError.textContent = error.message;
+    els.importError.classList.remove("hidden");
+  }
+});
+
 els.cancelList.addEventListener("click", () => els.dialogAddList.close());
 
 els.addListForm.addEventListener("submit", (e) => {
@@ -572,6 +715,8 @@ els.btnHeaderDeleteList.addEventListener("click", async () => {
 });
 
 els.btnAddVocab.addEventListener("click", () => openVocabDialog());
+
+els.btnShareList.addEventListener("click", () => shareCurrentList());
 
 els.cancelVocab.addEventListener("click", () => els.dialogVocab.close());
 

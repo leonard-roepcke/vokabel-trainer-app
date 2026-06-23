@@ -90,8 +90,17 @@ h2 {
   margin-bottom: 1rem;
 }
 
-#list-detail .section-header {
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+#list-detail .section-header {
+  justify-content: space-between;
 }
 
 .btn-primary {
@@ -450,6 +459,31 @@ dialog input[type="text"] {
 dialog input[type="text"]:focus {
   outline: 2px solid #3b82f6;
   border-color: transparent;
+}
+
+dialog textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: ui-monospace, monospace;
+  line-height: 1.4;
+  resize: vertical;
+  min-height: 8rem;
+}
+
+dialog textarea:focus {
+  outline: 2px solid #3b82f6;
+  border-color: transparent;
+}
+
+.dialog-error {
+  margin: 0 0 0.75rem;
+  color: #b91c1c;
+  font-size: 0.9rem;
 }
 
 .flip-choice {
