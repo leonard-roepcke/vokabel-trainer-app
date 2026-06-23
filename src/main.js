@@ -1,12 +1,12 @@
 const STORAGE_KEY = "vokabel-trainer-data";
 const OLD_STORAGE_KEY = "vokabel-trainer-vocabs";
 
-const FLIP_MODES = ["random", "front", "back"];
 const FLIP_LABELS = {
-  random: "Zufällig",
   front: "Immer vorne",
-  back: "Immer hinten",
+  both: "Beidseitig",
 };
+
+const EDIT_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
 
 let data = loadData();
 let currentListId = null;
@@ -32,10 +32,15 @@ const els = {
   addListForm: document.getElementById("add-list-form"),
   inputListName: document.getElementById("input-list-name"),
   cancelList: document.getElementById("cancel-list"),
-  dialogAddVocab: document.getElementById("dialog-add-vocab"),
-  addVocabForm: document.getElementById("add-vocab-form"),
+  dialogVocab: document.getElementById("dialog-vocab"),
+  vocabForm: document.getElementById("vocab-form"),
+  vocabDialogTitle: document.getElementById("vocab-dialog-title"),
+  vocabSubmitBtn: document.getElementById("vocab-submit-btn"),
+  editVocabId: document.getElementById("edit-vocab-id"),
   inputFront: document.getElementById("input-front"),
   inputBack: document.getElementById("input-back"),
+  flipFront: document.getElementById("flip-front"),
+  flipBoth: document.getElementById("flip-both"),
   cancelVocab: document.getElementById("cancel-vocab"),
   learnPickList: document.getElementById("learn-pick-list"),
   learnLists: document.getElementById("learn-lists"),
@@ -57,7 +62,7 @@ const els = {
 function loadData() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored) return normalizeData(JSON.parse(stored));
   } catch {
     /* ignore */
   }
@@ -69,7 +74,7 @@ function loadData() {
         id: v.id,
         front: v.front,
         back: v.back,
-        flipMode: "random",
+        flipMode: "both",
       }));
       localStorage.removeItem(OLD_STORAGE_KEY);
       return {
@@ -81,6 +86,20 @@ function loadData() {
   }
 
   return { lists: [] };
+}
+
+function normalizeFlipMode(mode) {
+  if (mode === "front") return "front";
+  return "both";
+}
+
+function normalizeData(parsed) {
+  parsed.lists?.forEach((list) => {
+    list.vocabs?.forEach((vocab) => {
+      vocab.flipMode = normalizeFlipMode(vocab.flipMode);
+    });
+  });
+  return parsed;
 }
 
 function saveData() {
@@ -97,9 +116,35 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-function nextFlipMode(mode) {
-  const i = FLIP_MODES.indexOf(mode ?? "random");
-  return FLIP_MODES[(i + 1) % FLIP_MODES.length];
+function getSelectedFlipMode() {
+  return els.flipBoth.checked ? "both" : "front";
+}
+
+function setFlipModeRadio(mode) {
+  const normalized = normalizeFlipMode(mode);
+  els.flipFront.checked = normalized === "front";
+  els.flipBoth.checked = normalized === "both";
+}
+
+function openVocabDialog(vocab = null) {
+  if (vocab) {
+    els.vocabDialogTitle.textContent = "Vokabel bearbeiten";
+    els.vocabSubmitBtn.textContent = "Speichern";
+    els.editVocabId.value = vocab.id;
+    els.inputFront.value = vocab.front;
+    els.inputBack.value = vocab.back;
+    setFlipModeRadio(vocab.flipMode);
+  } else {
+    els.vocabDialogTitle.textContent = "Neue Vokabel";
+    els.vocabSubmitBtn.textContent = "Hinzufügen";
+    els.editVocabId.value = "";
+    els.inputFront.value = "";
+    els.inputBack.value = "";
+    setFlipModeRadio("front");
+  }
+
+  els.dialogVocab.showModal();
+  els.inputFront.focus();
 }
 
 function switchView(view) {
@@ -139,9 +184,9 @@ function renderLists() {
 
   data.lists.forEach((list) => {
     const li = document.createElement("li");
-    li.className = "list-item";
+    li.className = "card list-card";
     li.innerHTML = `
-      <button type="button" class="list-open" data-id="${list.id}">
+      <button type="button" class="card-body list-open" data-id="${list.id}">
         <strong>${escapeHtml(list.name)}</strong>
         <span>${list.vocabs.length} Vokabel${list.vocabs.length === 1 ? "" : "n"}</span>
       </button>
@@ -160,15 +205,16 @@ function renderVocabs() {
 
   list.vocabs.forEach((vocab) => {
     const li = document.createElement("li");
-    li.className = "vocab-item";
+    li.className = "card vocab-card";
     li.innerHTML = `
-      <div class="vocab-text">
+      <div class="card-body vocab-text">
         <strong>${escapeHtml(vocab.front)}</strong>
         <span>${escapeHtml(vocab.back)}</span>
+        <span class="mode-badge">${FLIP_LABELS[normalizeFlipMode(vocab.flipMode)]}</span>
       </div>
       <div class="vocab-actions">
-        <button type="button" class="flip-mode-btn" data-id="${vocab.id}" title="Anzeigemodus wechseln">
-          ${FLIP_LABELS[vocab.flipMode ?? "random"]}
+        <button type="button" class="icon-btn edit-btn" data-id="${vocab.id}" aria-label="Vokabel bearbeiten">
+          ${EDIT_ICON}
         </button>
         <button type="button" class="delete-btn" data-id="${vocab.id}">Löschen</button>
       </div>
@@ -194,7 +240,7 @@ function deleteList(id) {
   else renderLists();
 }
 
-function addVocab(listId, front, back) {
+function addVocab(listId, front, back, flipMode) {
   const list = getList(listId);
   if (!list) return;
 
@@ -202,8 +248,23 @@ function addVocab(listId, front, back) {
     id: crypto.randomUUID(),
     front: front.trim(),
     back: back.trim(),
-    flipMode: "random",
+    flipMode: normalizeFlipMode(flipMode),
   });
+  saveData();
+  renderVocabs();
+  renderLists();
+}
+
+function updateVocab(listId, vocabId, front, back, flipMode) {
+  const list = getList(listId);
+  if (!list) return;
+
+  const vocab = list.vocabs.find((v) => v.id === vocabId);
+  if (!vocab) return;
+
+  vocab.front = front.trim();
+  vocab.back = back.trim();
+  vocab.flipMode = normalizeFlipMode(flipMode);
   saveData();
   renderVocabs();
   renderLists();
@@ -219,18 +280,6 @@ function deleteVocab(listId, vocabId) {
   renderLists();
 }
 
-function toggleFlipMode(listId, vocabId) {
-  const list = getList(listId);
-  if (!list) return;
-
-  const vocab = list.vocabs.find((v) => v.id === vocabId);
-  if (!vocab) return;
-
-  vocab.flipMode = nextFlipMode(vocab.flipMode);
-  saveData();
-  renderVocabs();
-}
-
 function renderLearnListPicker() {
   els.learnPickList.classList.remove("hidden");
   els.learnEmpty.classList.add("hidden");
@@ -242,8 +291,9 @@ function renderLearnListPicker() {
 
   withVocabs.forEach((list) => {
     const li = document.createElement("li");
+    li.className = "card list-card";
     li.innerHTML = `
-      <button type="button" class="list-open learn-pick" data-id="${list.id}">
+      <button type="button" class="card-body list-open learn-pick" data-id="${list.id}">
         <strong>${escapeHtml(list.name)}</strong>
         <span>${list.vocabs.length} Vokabel${list.vocabs.length === 1 ? "" : "n"}</span>
       </button>
@@ -273,13 +323,8 @@ function getLearnVocabs() {
 }
 
 function applyStartSide(vocab) {
-  const mode = vocab.flipMode ?? "random";
-  let showBack = false;
-
-  if (mode === "front") showBack = false;
-  else if (mode === "back") showBack = true;
-  else showBack = Math.random() < 0.5;
-
+  const mode = normalizeFlipMode(vocab.flipMode);
+  const showBack = mode === "both" && Math.random() < 0.5;
   els.flashcard.classList.toggle("flipped", showBack);
 }
 
@@ -338,20 +383,26 @@ els.addListForm.addEventListener("submit", (e) => {
 
 els.btnBackLists.addEventListener("click", showListsOverview);
 
-els.btnAddVocab.addEventListener("click", () => {
-  els.inputFront.value = "";
-  els.inputBack.value = "";
-  els.dialogAddVocab.showModal();
-  els.inputFront.focus();
-});
+els.btnAddVocab.addEventListener("click", () => openVocabDialog());
 
-els.cancelVocab.addEventListener("click", () => els.dialogAddVocab.close());
+els.cancelVocab.addEventListener("click", () => els.dialogVocab.close());
 
-els.addVocabForm.addEventListener("submit", (e) => {
+els.vocabForm.addEventListener("submit", (e) => {
   e.preventDefault();
   if (!currentListId) return;
-  addVocab(currentListId, els.inputFront.value, els.inputBack.value);
-  els.dialogAddVocab.close();
+
+  const front = els.inputFront.value;
+  const back = els.inputBack.value;
+  const flipMode = getSelectedFlipMode();
+  const editId = els.editVocabId.value;
+
+  if (editId) {
+    updateVocab(currentListId, editId, front, back, flipMode);
+  } else {
+    addVocab(currentListId, front, back, flipMode);
+  }
+
+  els.dialogVocab.close();
 });
 
 els.listsList.addEventListener("click", (e) => {
@@ -365,9 +416,11 @@ els.listsList.addEventListener("click", (e) => {
 });
 
 els.vocabList.addEventListener("click", (e) => {
-  const flip = e.target.closest(".flip-mode-btn");
-  if (flip) {
-    toggleFlipMode(currentListId, flip.dataset.id);
+  const edit = e.target.closest(".edit-btn");
+  if (edit) {
+    const list = getList(currentListId);
+    const vocab = list?.vocabs.find((v) => v.id === edit.dataset.id);
+    if (vocab) openVocabDialog(vocab);
     return;
   }
   const del = e.target.closest(".delete-btn");

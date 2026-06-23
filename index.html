@@ -30,7 +30,7 @@
                 + Liste
               </button>
             </div>
-            <ul id="lists-list" class="item-list"></ul>
+            <ul id="lists-list" class="card-stack"></ul>
             <p id="lists-empty" class="hint">
               Noch keine Listen. Lege eine neue an.
             </p>
@@ -46,7 +46,7 @@
                 + Vokabel
               </button>
             </div>
-            <ul id="vocab-list" class="item-list"></ul>
+            <ul id="vocab-list" class="card-stack"></ul>
             <p id="vocabs-empty" class="hint hidden">
               Noch keine Vokabeln in dieser Liste.
             </p>
@@ -56,7 +56,7 @@
         <section id="view-learn" class="view hidden">
           <div id="learn-pick-list">
             <h2>Liste zum Lernen wählen</h2>
-            <ul id="learn-lists" class="item-list"></ul>
+            <ul id="learn-lists" class="card-stack"></ul>
             <p id="learn-lists-empty" class="hint hidden">
               Keine Listen mit Vokabeln vorhanden.
             </p>
@@ -78,15 +78,15 @@
             <button
               type="button"
               id="flashcard"
-              class="flashcard"
+              class="card flashcard"
               aria-label="Karte umdrehen"
             >
               <div class="flashcard-inner">
-                <div class="flashcard-front">
+                <div class="card-face flashcard-front">
                   <span class="label">Vorderseite</span>
                   <p id="card-front"></p>
                 </div>
-                <div class="flashcard-back">
+                <div class="card-face flashcard-back">
                   <span class="label">Rückseite</span>
                   <p id="card-back"></p>
                 </div>
@@ -125,9 +125,10 @@
       </form>
     </dialog>
 
-    <dialog id="dialog-add-vocab">
-      <form id="add-vocab-form" method="dialog">
-        <h2>Neue Vokabel</h2>
+    <dialog id="dialog-vocab">
+      <form id="vocab-form" method="dialog">
+        <h2 id="vocab-dialog-title">Neue Vokabel</h2>
+        <input type="hidden" id="edit-vocab-id" value="" />
         <label>
           Vorderseite
           <input
@@ -146,11 +147,30 @@
             placeholder="z.B. house"
           />
         </label>
+        <fieldset class="flip-choice">
+          <legend>Anzeige beim Lernen</legend>
+          <label class="radio-label">
+            <input
+              type="radio"
+              name="flip-mode"
+              value="front"
+              id="flip-front"
+              checked
+            />
+            Immer vorne
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="flip-mode" value="both" id="flip-both" />
+            Beidseitig
+          </label>
+        </fieldset>
         <div class="dialog-actions">
           <button type="button" id="cancel-vocab" class="btn-secondary">
             Abbrechen
           </button>
-          <button type="submit" class="btn-primary">Hinzufügen</button>
+          <button type="submit" class="btn-primary" id="vocab-submit-btn">
+            Hinzufügen
+          </button>
         </div>
       </form>
     </dialog>

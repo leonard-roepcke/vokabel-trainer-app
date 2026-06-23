@@ -4,6 +4,13 @@
   box-sizing: border-box;
 }
 
+:root {
+  --card-radius: 16px;
+  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --card-height: 5.75rem;
+  --card-height-lg: 220px;
+}
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
@@ -114,40 +121,41 @@ h2 {
   text-decoration: underline;
 }
 
-.item-list {
+.card-stack {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card {
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
 }
 
-.item-list li {
-  border-bottom: 1px solid #e4e4e7;
-}
-
-.item-list li:last-child {
-  border-bottom: none;
-}
-
-.list-item,
-.vocab-item {
+.list-card,
+.vocab-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  min-height: var(--card-height);
+  padding: 0 1rem;
 }
 
-.list-open {
+.card-body {
   flex: 1;
   min-width: 0;
-  padding: 0;
   border: none;
   background: none;
   text-align: left;
+  padding: 0.75rem 0;
+}
+
+button.card-body {
   cursor: pointer;
 }
 
@@ -165,46 +173,63 @@ h2 {
   color: #3b82f6;
 }
 
-.vocab-text {
-  flex: 1;
-  min-width: 0;
-}
-
 .vocab-text strong {
   display: block;
+  font-size: 1rem;
 }
 
-.vocab-text span {
+.vocab-text > span:not(.mode-badge) {
+  display: block;
   color: #71717a;
   font-size: 0.9rem;
 }
 
+.mode-badge {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
 .vocab-actions {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.35rem;
   flex-shrink: 0;
 }
 
-.flip-mode-btn {
-  padding: 0.35rem 0.5rem;
-  border: 1px solid #d4d4d8;
-  border-radius: 6px;
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
   background: #f4f4f5;
   color: #3f3f46;
-  font-size: 0.75rem;
   cursor: pointer;
-  white-space: nowrap;
 }
 
-.flip-mode-btn:hover {
+.icon-btn:hover {
   background: #e4e4e7;
+  color: #18181b;
+}
+
+.icon {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .delete-btn {
   padding: 0.35rem 0.6rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #fee2e2;
   color: #b91c1c;
   font-size: 0.85rem;
@@ -233,11 +258,10 @@ h2 {
 .flashcard {
   display: block;
   width: 100%;
-  min-height: 200px;
+  height: var(--card-height-lg);
   margin: 0 auto 0.75rem;
   padding: 0;
   border: none;
-  background: transparent;
   cursor: pointer;
   perspective: 1000px;
 }
@@ -245,7 +269,7 @@ h2 {
 .flashcard-inner {
   position: relative;
   width: 100%;
-  min-height: 200px;
+  height: 100%;
   transition: transform 0.4s;
   transform-style: preserve-3d;
 }
@@ -254,8 +278,7 @@ h2 {
   transform: rotateY(180deg);
 }
 
-.flashcard-front,
-.flashcard-back {
+.card-face {
   position: absolute;
   inset: 0;
   display: flex;
@@ -263,15 +286,15 @@ h2 {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  border-radius: 12px;
+  border-radius: var(--card-radius);
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--card-shadow);
   backface-visibility: hidden;
 }
 
 .flashcard-back {
   transform: rotateY(180deg);
-  background: #eff6ff;
+  background: #f8fafc;
 }
 
 .flashcard .label {
@@ -324,7 +347,7 @@ h2 {
 
 dialog {
   border: none;
-  border-radius: 12px;
+  border-radius: var(--card-radius);
   padding: 0;
   max-width: calc(100vw - 2rem);
   width: 360px;
@@ -350,7 +373,7 @@ dialog label {
   font-weight: 500;
 }
 
-dialog input {
+dialog input[type="text"] {
   display: block;
   width: 100%;
   margin-top: 0.25rem;
@@ -360,9 +383,35 @@ dialog input {
   font-size: 1rem;
 }
 
-dialog input:focus {
+dialog input[type="text"]:focus {
   outline: 2px solid #3b82f6;
   border-color: transparent;
+}
+
+.flip-choice {
+  margin: 0 0 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+}
+
+.flip-choice legend {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0 0.25rem;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.radio-label input {
+  margin: 0;
 }
 
 .dialog-actions {
