@@ -10,6 +10,7 @@ const FLIP_LABELS = {
 const LEARN_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3 1 9l4 2.18V17c0 2.21 3.13 4 7 4s7-1.79 7-4v-5.82L23 9 12 3zm0 2.18L19.35 9 12 12.82 4.65 9 12 5.18zM5 17v-4.73l7 3.82 7-3.82V17c0 1.1-2.62 2-7 2s-7-.9-7-2z"/></svg>`;
 const EDIT_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
 const DELETE_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+const BACK_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>`;
 
 let data = loadData();
 let currentListId = null;
@@ -19,6 +20,11 @@ let learnIndex = 0;
 
 const els = {
   appTitle: document.getElementById("app-title"),
+  headerSimple: document.getElementById("header-simple"),
+  headerListNav: document.getElementById("header-list-nav"),
+  listHeaderTitle: document.getElementById("list-header-title"),
+  btnHeaderBack: document.getElementById("btn-header-back"),
+  btnHeaderDeleteList: document.getElementById("btn-header-delete-list"),
   listsOverview: document.getElementById("lists-overview"),
   listDetail: document.getElementById("list-detail"),
   listsList: document.getElementById("lists-list"),
@@ -26,7 +32,6 @@ const els = {
   vocabList: document.getElementById("vocab-list"),
   vocabsEmpty: document.getElementById("vocabs-empty"),
   btnAddList: document.getElementById("btn-add-list"),
-  btnBackLists: document.getElementById("btn-back-lists"),
   btnAddVocab: document.getElementById("btn-add-vocab"),
   dialogAddList: document.getElementById("dialog-add-list"),
   addListForm: document.getElementById("add-list-form"),
@@ -57,7 +62,14 @@ const els = {
   learnDone: document.getElementById("learn-done"),
   learnProgress: document.getElementById("learn-progress"),
   learnFlipHint: document.getElementById("learn-flip-hint"),
+  dialogConfirm: document.getElementById("dialog-confirm"),
+  confirmTitle: document.getElementById("confirm-title"),
+  confirmMessage: document.getElementById("confirm-message"),
+  confirmOk: document.getElementById("confirm-ok"),
 };
+
+els.btnHeaderBack.innerHTML = BACK_ICON;
+els.btnHeaderDeleteList.innerHTML = DELETE_ICON;
 
 function loadData() {
   try {
@@ -171,6 +183,32 @@ function setAppTitle(title) {
   els.appTitle.textContent = title;
 }
 
+function showSimpleHeader(title) {
+  els.headerSimple.classList.remove("hidden");
+  els.headerListNav.classList.add("hidden");
+  setAppTitle(title);
+}
+
+function showListHeader(title) {
+  els.headerSimple.classList.add("hidden");
+  els.headerListNav.classList.remove("hidden");
+  els.listHeaderTitle.textContent = title;
+}
+
+function openConfirmDialog({ title, message, confirmLabel = "Löschen" }) {
+  els.confirmTitle.textContent = title;
+  els.confirmMessage.textContent = message;
+  els.confirmOk.textContent = confirmLabel;
+  els.dialogConfirm.showModal();
+  return new Promise((resolve) => {
+    els.dialogConfirm.addEventListener(
+      "close",
+      () => resolve(els.dialogConfirm.returnValue === "confirm"),
+      { once: true },
+    );
+  });
+}
+
 function getSelectedFlipMode() {
   return els.flipBoth.checked ? "both" : "front";
 }
@@ -239,7 +277,7 @@ function showListsOverview() {
   els.listsOverview.classList.remove("hidden");
   els.listDetail.classList.add("hidden");
   els.learnArea.classList.add("hidden");
-  setAppTitle(DEFAULT_TITLE);
+  showSimpleHeader(DEFAULT_TITLE);
   renderLists();
 }
 
@@ -251,7 +289,7 @@ function openList(id) {
   els.listsOverview.classList.add("hidden");
   els.listDetail.classList.remove("hidden");
   els.learnArea.classList.add("hidden");
-  setAppTitle(list.name);
+  showListHeader(list.name);
   renderVocabs();
 }
 
@@ -266,12 +304,15 @@ function renderLists() {
     const learnDisabled = dueCount === 0 ? "disabled" : "";
     const dueLabel =
       dueCount > 0
-        ? `<span class="due-badge">${dueCount} fällig</span>`
+        ? `<div class="badge-row"><span class="badge">${dueCount} fällig</span></div>`
         : "";
     li.innerHTML = `
       <div class="card-body list-info">
         <strong>${escapeHtml(list.name)}</strong>
-        <span>${list.vocabs.length} Vokabel${list.vocabs.length === 1 ? "" : "n"} ${dueLabel}</span>
+        <div class="list-meta">
+          <span>${list.vocabs.length} Vokabel${list.vocabs.length === 1 ? "" : "n"}</span>
+          ${dueLabel}
+        </div>
       </div>
       <div class="list-actions">
         <button type="button" class="icon-btn learn-btn" data-id="${list.id}" aria-label="Lernen" ${learnDisabled}>
@@ -279,9 +320,6 @@ function renderLists() {
         </button>
         <button type="button" class="icon-btn edit-btn" data-id="${list.id}" aria-label="Bearbeiten">
           ${EDIT_ICON}
-        </button>
-        <button type="button" class="icon-btn delete-btn" data-id="${list.id}" aria-label="Löschen">
-          ${DELETE_ICON}
         </button>
       </div>
     `;
@@ -303,8 +341,10 @@ function renderVocabs() {
       <div class="card-body vocab-text">
         <strong>${escapeHtml(vocab.front)}</strong>
         <span>${escapeHtml(vocab.back)}</span>
-        <span class="mode-badge">${FLIP_LABELS[normalizeFlipMode(vocab.flipMode)]}</span>
-        <span class="review-badge">${formatReviewDate(vocab.nextReview)}</span>
+        <div class="badge-row">
+          <span class="badge">${FLIP_LABELS[normalizeFlipMode(vocab.flipMode)]}</span>
+          <span class="badge">${formatReviewDate(vocab.nextReview)}</span>
+        </div>
       </div>
       <div class="vocab-actions">
         <button type="button" class="icon-btn edit-btn" data-id="${vocab.id}" aria-label="Vokabel bearbeiten">
@@ -392,7 +432,7 @@ function startLearn(listId) {
   els.listsOverview.classList.add("hidden");
   els.listDetail.classList.add("hidden");
   els.learnArea.classList.remove("hidden");
-  setAppTitle(list.name);
+  showSimpleHeader(list.name);
   showLearnState();
 }
 
@@ -488,7 +528,19 @@ els.addListForm.addEventListener("submit", (e) => {
   els.dialogAddList.close();
 });
 
-els.btnBackLists.addEventListener("click", showListsOverview);
+els.btnHeaderBack.addEventListener("click", showListsOverview);
+
+els.btnHeaderDeleteList.addEventListener("click", async () => {
+  if (!currentListId) return;
+  const list = getList(currentListId);
+  if (!list) return;
+
+  const confirmed = await openConfirmDialog({
+    title: "Liste löschen?",
+    message: `„${list.name}" und alle Vokabeln darin werden unwiderruflich gelöscht.`,
+  });
+  if (confirmed) deleteList(currentListId);
+});
 
 els.btnAddVocab.addEventListener("click", () => openVocabDialog());
 
@@ -523,8 +575,6 @@ els.listsList.addEventListener("click", (e) => {
     openList(edit.dataset.id);
     return;
   }
-  const del = e.target.closest(".delete-btn");
-  if (del) deleteList(del.dataset.id);
 });
 
 els.vocabList.addEventListener("click", (e) => {

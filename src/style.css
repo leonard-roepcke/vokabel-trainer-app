@@ -29,8 +29,27 @@ body {
 }
 
 header {
-  text-align: center;
   margin-bottom: 2rem;
+}
+
+#header-simple {
+  text-align: center;
+}
+
+.header-list-nav {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr 2.25rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-list-nav h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 h1 {
@@ -142,9 +161,18 @@ h2 {
   font-size: 1rem;
 }
 
-.list-info span {
+.list-info span,
+.list-meta > span {
   color: #71717a;
   font-size: 0.85rem;
+}
+
+.list-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
 }
 
 .list-actions,
@@ -209,21 +237,33 @@ h2 {
   font-size: 1rem;
 }
 
-.vocab-text > span:not(.mode-badge) {
+.vocab-text > span:not(.badge) {
   display: block;
   color: #71717a;
   font-size: 0.9rem;
 }
 
-.mode-badge {
-  display: inline-block;
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
   margin-top: 0.35rem;
-  padding: 0.15rem 0.45rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.35rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 999px;
   background: #eff6ff;
   color: #1d4ed8;
   font-size: 0.7rem;
   font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .hint {
@@ -358,27 +398,19 @@ h2 {
   border-color: #f87171;
 }
 
-.due-badge {
-  display: inline-block;
-  margin-top: 0.35rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: #fef3c7;
-  color: #92400e;
-  font-size: 0.7rem;
-  font-weight: 500;
+.btn-danger {
+  background: #dc2626;
 }
 
-.review-badge {
-  display: inline-block;
-  margin-top: 0.35rem;
-  margin-left: 0.35rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: #f4f4f5;
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+.confirm-message {
+  margin: 0 0 1rem;
   color: #52525b;
-  font-size: 0.7rem;
-  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 dialog {

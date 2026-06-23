@@ -12,7 +12,24 @@
   <body>
     <div id="app">
       <header>
-        <h1 id="app-title">Vokabeltrainer</h1>
+        <div id="header-simple">
+          <h1 id="app-title">Vokabeltrainer</h1>
+        </div>
+        <div id="header-list-nav" class="header-list-nav hidden">
+          <button
+            type="button"
+            id="btn-header-back"
+            class="icon-btn"
+            aria-label="Zurück zu Listen"
+          ></button>
+          <h1 id="list-header-title"></h1>
+          <button
+            type="button"
+            id="btn-header-delete-list"
+            class="icon-btn delete-btn"
+            aria-label="Liste löschen"
+          ></button>
+        </div>
       </header>
 
       <main>
@@ -30,9 +47,6 @@
         </div>
 
         <div id="list-detail" class="hidden">
-          <button type="button" id="btn-back-lists" class="back-btn">
-            ← Listen
-          </button>
           <div class="section-header">
             <button type="button" id="btn-add-vocab" class="btn-primary">
               + Vokabel
@@ -152,6 +166,26 @@
           </button>
           <button type="submit" class="btn-primary" id="vocab-submit-btn">
             Hinzufügen
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-confirm">
+      <form id="confirm-form" method="dialog">
+        <h2 id="confirm-title"></h2>
+        <p id="confirm-message" class="confirm-message"></p>
+        <div class="dialog-actions">
+          <button type="submit" value="cancel" class="btn-secondary">
+            Abbrechen
+          </button>
+          <button
+            type="submit"
+            value="confirm"
+            class="btn-primary btn-danger"
+            id="confirm-ok"
+          >
+            Löschen
           </button>
         </div>
       </form>
