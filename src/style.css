@@ -124,6 +124,10 @@ header {
   gap: 0.5rem;
 }
 
+.header-list-nav.learn-header {
+  grid-template-columns: 2.25rem 1fr;
+}
+
 .header-list-nav h1,
 .list-header-title-btn {
   margin: 0;

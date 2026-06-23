@@ -46,6 +46,7 @@ const els = {
   btnAddList: document.getElementById("btn-add-list"),
   btnImportList: document.getElementById("btn-import-list"),
   btnShareList: document.getElementById("btn-share-list"),
+  btnLearnList: document.getElementById("btn-learn-list"),
   btnAddVocab: document.getElementById("btn-add-vocab"),
   dialogShareList: document.getElementById("dialog-share-list"),
   shareListForm: document.getElementById("share-list-form"),
@@ -93,6 +94,7 @@ const els = {
 
 setHeaderBack();
 els.btnHeaderDeleteList.innerHTML = DELETE_ICON;
+els.btnLearnList.innerHTML = LEARN_ICON;
 els.btnSettings.innerHTML = SETTINGS_ICON;
 
 function loadSettings() {
@@ -248,17 +250,21 @@ function setHeaderBack({ icon = BACK_ICON, ariaKey = "backToLists" } = {}) {
   els.btnHeaderBack.setAttribute("aria-label", t(ariaKey));
 }
 
-function showNavHeader(title, { showDelete = false, editableTitle = false } = {}) {
+function showNavHeader(
+  title,
+  { showDelete = false, editableTitle = false, learnMode = false } = {},
+) {
   els.headerSimple.classList.add("hidden");
   els.headerListNav.classList.remove("hidden");
+  els.headerListNav.classList.toggle("learn-header", learnMode);
   els.listHeaderTitle.textContent = title;
-  els.btnHeaderDeleteList.classList.toggle("hidden", !showDelete);
+  els.btnHeaderDeleteList.classList.toggle("hidden", !showDelete || learnMode);
   els.listHeaderTitle.classList.toggle("list-header-title-readonly", !editableTitle);
 }
 
 function showLearnHeader(title) {
   setHeaderBack({ icon: HOME_ICON, ariaKey: "backToHome" });
-  showNavHeader(title, { showDelete: false, editableTitle: true });
+  showNavHeader(title, { showDelete: false, editableTitle: false, learnMode: true });
 }
 
 function applySettings() {
@@ -610,6 +616,8 @@ function renderVocabs() {
 
   els.vocabList.innerHTML = "";
   els.vocabsEmpty.classList.toggle("hidden", list.vocabs.length > 0);
+  els.btnLearnList.disabled = countDueVocabs(list) === 0;
+  els.btnLearnList.setAttribute("aria-label", t("learn"));
 
   list.vocabs.forEach((vocab) => {
     const li = document.createElement("li");
@@ -864,6 +872,11 @@ els.btnHeaderDeleteList.addEventListener("click", async () => {
 });
 
 els.btnAddVocab.addEventListener("click", () => openVocabDialog());
+
+els.btnLearnList.addEventListener("click", () => {
+  if (!currentListId || els.btnLearnList.disabled) return;
+  startLearn(currentListId);
+});
 
 els.btnShareList.addEventListener("click", () => shareCurrentList());
 

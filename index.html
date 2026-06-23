@@ -102,14 +102,23 @@
             >
               Liste teilen
             </button>
-            <button
-              type="button"
-              id="btn-add-vocab"
-              class="btn-primary"
-              data-i18n="addVocab"
-            >
-              + Vokabel
-            </button>
+            <div class="section-header-actions">
+              <button
+                type="button"
+                id="btn-learn-list"
+                class="icon-btn learn-btn"
+                data-i18n-aria="learn"
+                aria-label="Lernen"
+              ></button>
+              <button
+                type="button"
+                id="btn-add-vocab"
+                class="btn-primary"
+                data-i18n="addVocab"
+              >
+                + Vokabel
+              </button>
+            </div>
           </div>
           <ul id="vocab-list" class="card-stack"></ul>
           <p id="vocabs-empty" class="hint hidden" data-i18n="vocabsEmpty">
