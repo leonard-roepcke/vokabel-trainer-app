@@ -15,7 +15,10 @@ body {
 #app {
   max-width: 520px;
   margin: 0 auto;
-  padding: 1.5rem 1rem 2rem;
+  padding: calc(1.5rem + env(safe-area-inset-top, 0px)) 1rem
+    calc(2rem + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(1rem + env(safe-area-inset-left, 0px));
+  padding-right: calc(1rem + env(safe-area-inset-right, 0px));
 }
 
 header {
@@ -49,90 +52,117 @@ nav {
   color: #fff;
 }
 
-.view.hidden {
+.view.hidden,
+.hidden {
   display: none;
 }
 
 h2 {
-  margin: 0 0 1rem;
+  margin: 0;
   font-size: 1.1rem;
 }
 
-form {
-  background: #fff;
-  padding: 1.25rem;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-label {
-  display: block;
-  margin-bottom: 0.75rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-input {
-  display: block;
-  width: 100%;
-  margin-top: 0.25rem;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid #d4d4d8;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
-input:focus {
-  outline: 2px solid #3b82f6;
-  border-color: transparent;
-}
-
-button[type="submit"],
-.learn-actions button {
-  padding: 0.6rem 1rem;
-  border: none;
-  border-radius: 8px;
-  background: #3b82f6;
-  color: #fff;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-
-button[type="submit"] {
-  width: 100%;
-  margin-top: 0.5rem;
-}
-
-button[type="submit"]:hover,
-.learn-actions button:hover {
-  background: #2563eb;
-}
-
-.list-section {
-  background: #fff;
-  padding: 1.25rem;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-#vocab-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-#vocab-list li {
+.section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.75rem 0;
+  margin-bottom: 1rem;
+}
+
+.btn-primary {
+  padding: 0.5rem 0.9rem;
+  border: none;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  padding: 0.5rem 0.9rem;
+  border: 2px solid #d4d4d8;
+  border-radius: 8px;
+  background: #fff;
+  color: #18181b;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #f4f4f5;
+}
+
+.back-btn {
+  display: inline-block;
+  margin-bottom: 1rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #3b82f6;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  text-decoration: underline;
+}
+
+.item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.item-list li {
   border-bottom: 1px solid #e4e4e7;
 }
 
-#vocab-list li:last-child {
+.item-list li:last-child {
   border-bottom: none;
+}
+
+.list-item,
+.vocab-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.list-open {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.list-open strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.list-open span {
+  color: #71717a;
+  font-size: 0.85rem;
+}
+
+.list-open:hover strong {
+  color: #3b82f6;
 }
 
 .vocab-text {
@@ -147,6 +177,28 @@ button[type="submit"]:hover,
 .vocab-text span {
   color: #71717a;
   font-size: 0.9rem;
+}
+
+.vocab-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.flip-mode-btn {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  background: #f4f4f5;
+  color: #3f3f46;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.flip-mode-btn:hover {
+  background: #e4e4e7;
 }
 
 .delete-btn {
@@ -168,16 +220,14 @@ button[type="submit"]:hover,
   color: #71717a;
   font-size: 0.9rem;
   text-align: center;
-}
-
-.hint.hidden {
-  display: none;
+  margin-top: 1rem;
 }
 
 .progress {
   text-align: center;
   font-weight: 600;
   margin: 0 0 1rem;
+  font-size: 0.95rem;
 }
 
 .flashcard {
@@ -248,9 +298,13 @@ button[type="submit"]:hover,
 }
 
 .learn-actions button {
+  padding: 0.6rem 1rem;
+  border: 2px solid #d4d4d8;
+  border-radius: 8px;
   background: #fff;
   color: #18181b;
-  border: 2px solid #d4d4d8;
+  font-size: 0.95rem;
+  cursor: pointer;
 }
 
 .learn-actions button:hover {
@@ -266,4 +320,58 @@ button[type="submit"]:hover,
 
 #btn-shuffle:hover {
   background: #2563eb;
+}
+
+dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  max-width: calc(100vw - 2rem);
+  width: 360px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+dialog form {
+  padding: 1.25rem;
+}
+
+dialog h2 {
+  margin-bottom: 1rem;
+}
+
+dialog label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+dialog input {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+dialog input:focus {
+  outline: 2px solid #3b82f6;
+  border-color: transparent;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+#learn-pick-list h2 {
+  margin-bottom: 1rem;
 }
