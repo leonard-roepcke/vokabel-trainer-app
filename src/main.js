@@ -491,30 +491,33 @@ function positionDialogForKeyboard(dialog) {
   const vv = window.visualViewport;
   if (!vv) return;
 
+  let positioned = false;
+
   const update = () => {
+    if (positioned) return;
+
     const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
-    if (keyboardHeight > 50) {
-      dialog.style.top = `${Math.max(vv.offsetTop + 8, 8)}px`;
-      dialog.style.maxHeight = `${vv.height - 16}px`;
-    } else {
-      dialog.style.top = "";
-      dialog.style.maxHeight = "";
-    }
+    if (keyboardHeight <= 50) return;
+
+    positioned = true;
+    vv.removeEventListener("resize", update);
+
+    dialog.style.top = "auto";
+    dialog.style.bottom = `${keyboardHeight + 16}px`;
+    dialog.style.maxHeight = `${vv.height - 32}px`;
   };
 
   vv.addEventListener("resize", update);
-  vv.addEventListener("scroll", update);
   dialog.addEventListener(
     "close",
     () => {
       vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
       dialog.style.top = "";
+      dialog.style.bottom = "";
       dialog.style.maxHeight = "";
     },
     { once: true },
   );
-  update();
 }
 
 function openVocabDialog(vocab = null) {

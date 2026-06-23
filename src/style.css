@@ -337,6 +337,14 @@ h2 {
   cursor: not-allowed;
 }
 
+.icon-btn.hidden {
+  display: none;
+}
+
+.header-list-nav.learn-header #btn-header-delete-list {
+  display: none;
+}
+
 .icon-btn.delete-btn {
   background: var(--danger-bg);
   color: var(--danger-text);
