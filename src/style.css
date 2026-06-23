@@ -1,0 +1,269 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f4f4f5;
+  color: #18181b;
+  line-height: 1.5;
+}
+
+#app {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+h1 {
+  margin: 0 0 1rem;
+  font-size: 1.75rem;
+}
+
+nav {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.nav-btn {
+  padding: 0.5rem 1.25rem;
+  border: 2px solid #d4d4d8;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.nav-btn.active {
+  border-color: #3b82f6;
+  background: #3b82f6;
+  color: #fff;
+}
+
+.view.hidden {
+  display: none;
+}
+
+h2 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+form {
+  background: #fff;
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+input {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+input:focus {
+  outline: 2px solid #3b82f6;
+  border-color: transparent;
+}
+
+button[type="submit"],
+.learn-actions button {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+button[type="submit"] {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+button[type="submit"]:hover,
+.learn-actions button:hover {
+  background: #2563eb;
+}
+
+.list-section {
+  background: #fff;
+  padding: 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+#vocab-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#vocab-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+#vocab-list li:last-child {
+  border-bottom: none;
+}
+
+.vocab-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.vocab-text strong {
+  display: block;
+}
+
+.vocab-text span {
+  color: #71717a;
+  font-size: 0.9rem;
+}
+
+.delete-btn {
+  padding: 0.35rem 0.6rem;
+  border: none;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.85rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.delete-btn:hover {
+  background: #fecaca;
+}
+
+.hint {
+  color: #71717a;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.hint.hidden {
+  display: none;
+}
+
+.progress {
+  text-align: center;
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+.flashcard {
+  display: block;
+  width: 100%;
+  min-height: 200px;
+  margin: 0 auto 0.75rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  perspective: 1000px;
+}
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+  transition: transform 0.4s;
+  transform-style: preserve-3d;
+}
+
+.flashcard.flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front,
+.flashcard-back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backface-visibility: hidden;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+  background: #eff6ff;
+}
+
+.flashcard .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #71717a;
+  margin-bottom: 0.5rem;
+}
+
+.flashcard p {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  word-break: break-word;
+}
+
+.learn-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.learn-actions button {
+  background: #fff;
+  color: #18181b;
+  border: 2px solid #d4d4d8;
+}
+
+.learn-actions button:hover {
+  background: #f4f4f5;
+  border-color: #a1a1aa;
+}
+
+#btn-shuffle {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+#btn-shuffle:hover {
+  background: #2563eb;
+}

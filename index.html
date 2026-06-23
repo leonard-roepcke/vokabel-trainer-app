@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vokabeltrainer</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Vokabeltrainer</h1>
+        <nav>
+          <button type="button" class="nav-btn active" data-view="manage">Vokabeln</button>
+          <button type="button" class="nav-btn" data-view="learn">Lernen</button>
+        </nav>
+      </header>
+
+      <main>
+        <section id="view-manage" class="view">
+          <form id="add-form">
+            <h2>Neue Vokabel</h2>
+            <label>
+              Vorderseite
+              <input type="text" id="input-front" required placeholder="z.B. Haus" />
+            </label>
+            <label>
+              Rückseite
+              <input type="text" id="input-back" required placeholder="z.B. house" />
+            </label>
+            <button type="submit">Hinzufügen</button>
+          </form>
+
+          <div class="list-section">
+            <h2>Deine Vokabeln (<span id="count">0</span>)</h2>
+            <ul id="vocab-list"></ul>
+            <p id="empty-hint" class="hint">Noch keine Vokabeln. Lege oben welche an.</p>
+          </div>
+        </section>
+
+        <section id="view-learn" class="view hidden">
+          <div id="learn-empty" class="hint hidden">
+            <p>Keine Vokabeln zum Lernen.</p>
+            <p>Lege zuerst welche unter „Vokabeln“ an.</p>
+          </div>
+
+          <div id="learn-area" class="hidden">
+            <p class="progress"><span id="card-index">1</span> / <span id="card-total">0</span></p>
+
+            <button type="button" id="flashcard" class="flashcard" aria-label="Karte umdrehen">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <span class="label">Vorderseite</span>
+                  <p id="card-front"></p>
+                </div>
+                <div class="flashcard-back">
+                  <span class="label">Rückseite</span>
+                  <p id="card-back"></p>
+                </div>
+              </div>
+            </button>
+            <p class="hint">Klicke auf die Karte zum Umdrehen</p>
+
+            <div class="learn-actions">
+              <button type="button" id="btn-prev">← Zurück</button>
+              <button type="button" id="btn-shuffle">Mischen</button>
+              <button type="button" id="btn-next">Weiter →</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
