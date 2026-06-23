@@ -12,26 +12,36 @@
   <body>
     <div id="app">
       <header>
-        <div id="header-simple">
-          <h1 id="app-title">Vokabeltrainer</h1>
+        <div id="header-simple" class="header-home">
+          <h1 id="app-title" data-i18n="appTitle">Vokabeltrainer</h1>
+          <button
+            type="button"
+            id="btn-settings"
+            class="icon-btn header-settings-btn"
+            data-i18n-aria="settings"
+            aria-label="Einstellungen"
+          ></button>
         </div>
         <div id="header-list-nav" class="header-list-nav hidden">
           <button
             type="button"
             id="btn-header-back"
             class="icon-btn"
+            data-i18n-aria="backToLists"
             aria-label="Zurück zu Listen"
           ></button>
           <button
             type="button"
             id="list-header-title"
             class="list-header-title-btn"
+            data-i18n-aria="editListName"
             aria-label="Listenname bearbeiten"
           ></button>
           <button
             type="button"
             id="btn-header-delete-list"
             class="icon-btn delete-btn"
+            data-i18n-aria="deleteList"
             aria-label="Liste löschen"
           ></button>
         </div>
@@ -40,33 +50,69 @@
       <main>
         <div id="lists-overview">
           <div class="section-header">
-            <h2>Listen</h2>
+            <h2 data-i18n="lists">Listen</h2>
             <div class="section-header-actions">
-              <button type="button" id="btn-import-list" class="btn-secondary">
+              <button
+                type="button"
+                id="btn-import-list"
+                class="btn-secondary"
+                data-i18n="importList"
+              >
                 Liste importieren
               </button>
-              <button type="button" id="btn-add-list" class="btn-primary">
+              <button
+                type="button"
+                id="btn-add-list"
+                class="btn-primary"
+                data-i18n="addList"
+              >
                 + Liste
               </button>
             </div>
           </div>
           <ul id="lists-list" class="card-stack"></ul>
-          <p id="lists-empty" class="hint">
+          <p id="lists-empty" class="hint" data-i18n="listsEmpty">
             Noch keine Listen. Lege eine neue an.
           </p>
         </div>
 
+        <div id="settings-area" class="hidden">
+          <div class="settings-card card">
+            <label class="setting-row">
+              <span data-i18n="darkMode">Dunkelmodus</span>
+              <input type="checkbox" id="setting-dark-mode" />
+            </label>
+            <label class="setting-row">
+              <span data-i18n="language">Sprache</span>
+              <select id="setting-language">
+                <option value="de">Deutsch</option>
+                <option value="en">English</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
         <div id="list-detail" class="hidden">
           <div class="section-header">
-            <button type="button" id="btn-share-list" class="btn-secondary">
+            <button
+              type="button"
+              id="btn-share-list"
+              class="btn-secondary"
+              data-i18n="shareList"
+            >
               Liste teilen
             </button>
-            <button type="button" id="btn-add-vocab" class="btn-primary">
+            <button
+              type="button"
+              id="btn-add-vocab"
+              class="btn-primary"
+              data-i18n="addVocab"
+            >
               + Vokabel
             </button>
           </div>
           <ul id="vocab-list" class="card-stack"></ul>
-          <p id="vocabs-empty" class="hint hidden">
+          <p id="vocabs-empty" class="hint hidden" data-i18n="vocabsEmpty">
             Noch keine Vokabeln in dieser Liste.
           </p>
         </div>
@@ -80,39 +126,69 @@
             type="button"
             id="flashcard"
             class="card flashcard"
+            data-i18n-aria="flipCard"
             aria-label="Karte umdrehen"
           >
             <div class="flashcard-inner">
               <div class="card-face flashcard-front">
                 <p id="card-front"></p>
-                <span class="label">Vorderseite</span>
+                <span class="label" data-i18n="cardFront">Vorderseite</span>
               </div>
               <div class="card-face flashcard-back">
                 <p id="card-back"></p>
-                <span class="label">Rückseite</span>
+                <span class="label" data-i18n="cardBack">Rückseite</span>
               </div>
             </div>
           </button>
-          <p id="learn-flip-hint" class="hint">Klicke auf die Karte zum Umdrehen</p>
+          <p id="learn-flip-hint" class="hint" data-i18n="flipHint">
+            Klicke auf die Karte zum Umdrehen
+          </p>
 
           <div id="learn-card-actions" class="learn-actions">
-            <button type="button" id="btn-knew" class="btn-knew">Wusste ich</button>
-            <button type="button" id="btn-unknown" class="btn-unknown">
+            <button type="button" id="btn-knew" class="btn-knew" data-i18n="knew">
+              Wusste ich
+            </button>
+            <button
+              type="button"
+              id="btn-unknown"
+              class="btn-unknown"
+              data-i18n="unknown"
+            >
               Wusste ich nicht
             </button>
           </div>
-          <p id="learn-done" class="hint hidden">
+          <p id="learn-done" class="hint hidden" data-i18n="learnDone">
             Alle fälligen Vokabeln für heute erledigt.
           </p>
         </div>
       </main>
     </div>
 
+    <dialog id="dialog-share-list">
+      <form id="share-list-form" method="dialog">
+        <h2 data-i18n="shareProgressTitle">Lernfortschritt teilen?</h2>
+        <p class="confirm-message" data-i18n="shareProgressMessage">
+          Soll der Lernfortschritt mit in die geteilten Listendaten?
+        </p>
+        <div class="dialog-actions dialog-actions-stack">
+          <button type="button" id="cancel-share-list" class="btn-secondary" data-i18n="cancel">
+            Abbrechen
+          </button>
+          <button type="submit" value="without" class="btn-primary" data-i18n="shareWithoutProgress">
+            Ohne Lernfortschritt
+          </button>
+          <button type="submit" value="with" class="btn-secondary" data-i18n="shareWithProgress">
+            Mit Lernfortschritt
+          </button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog id="dialog-import-list">
       <form id="import-list-form" method="dialog">
-        <h2>Liste importieren</h2>
+        <h2 data-i18n="importListTitle">Liste importieren</h2>
         <label>
-          Listendaten einfügen
+          <span data-i18n="pasteListData">Listendaten einfügen</span>
           <textarea
             id="input-import-list"
             required
@@ -122,80 +198,100 @@
         </label>
         <p id="import-error" class="dialog-error hidden"></p>
         <div class="dialog-actions">
-          <button type="button" id="cancel-import-list" class="btn-secondary">
+          <button
+            type="button"
+            id="cancel-import-list"
+            class="btn-secondary"
+            data-i18n="cancel"
+          >
             Abbrechen
           </button>
-          <button type="submit" class="btn-primary">Importieren</button>
+          <button type="submit" class="btn-primary" data-i18n="import">
+            Importieren
+          </button>
         </div>
       </form>
     </dialog>
 
     <dialog id="dialog-rename-list">
       <form id="rename-list-form" method="dialog">
-        <h2>Liste umbenennen</h2>
+        <h2 data-i18n="renameList">Liste umbenennen</h2>
         <label>
-          Name
+          <span data-i18n="name">Name</span>
           <input
             type="text"
             id="input-rename-list"
             required
+            data-i18n-placeholder="name"
             placeholder="Listenname"
           />
         </label>
         <div class="dialog-actions">
-          <button type="button" id="cancel-rename-list" class="btn-secondary">
+          <button
+            type="button"
+            id="cancel-rename-list"
+            class="btn-secondary"
+            data-i18n="cancel"
+          >
             Abbrechen
           </button>
-          <button type="submit" class="btn-primary">Speichern</button>
+          <button type="submit" class="btn-primary" data-i18n="save">
+            Speichern
+          </button>
         </div>
       </form>
     </dialog>
 
     <dialog id="dialog-add-list">
       <form id="add-list-form" method="dialog">
-        <h2>Neue Liste</h2>
+        <h2 data-i18n="newList">Neue Liste</h2>
         <label>
-          Name
+          <span data-i18n="name">Name</span>
           <input
             type="text"
             id="input-list-name"
             required
+            data-i18n-placeholder="listNamePlaceholder"
             placeholder="z.B. Englisch Unit 3"
           />
         </label>
         <div class="dialog-actions">
-          <button type="button" id="cancel-list" class="btn-secondary">
+          <button type="button" id="cancel-list" class="btn-secondary" data-i18n="cancel">
             Abbrechen
           </button>
-          <button type="submit" class="btn-primary">Erstellen</button>
+          <button type="submit" class="btn-primary" data-i18n="create">
+            Erstellen
+          </button>
         </div>
       </form>
     </dialog>
 
     <dialog id="dialog-vocab">
       <form id="vocab-form" method="dialog">
-        <h2 id="vocab-dialog-title">Neue Vokabel</h2>
+        <h2 id="vocab-dialog-title" data-i18n="newVocab">Neue Vokabel</h2>
         <input type="hidden" id="edit-vocab-id" value="" />
         <label>
-          Vorderseite
+          <span data-i18n="front">Vorderseite</span>
           <input
             type="text"
             id="input-front"
             required
+            data-i18n-placeholder="frontPlaceholder"
             placeholder="z.B. Haus"
           />
         </label>
         <label>
-          Rückseite
+          <span data-i18n="back">Rückseite</span>
           <input
             type="text"
             id="input-back"
             required
+            data-i18n-placeholder="backPlaceholder"
             placeholder="z.B. house"
           />
         </label>
         <fieldset class="flip-choice">
-          <legend>Anzeige beim Lernen</legend>
+          <legend data-i18n="flipModeLegend">Anzeige beim Lernen</legend>
           <label class="radio-label">
             <input
               type="radio"
@@ -204,18 +300,18 @@
               id="flip-front"
               checked
             />
-            Immer vorne
+            <span data-i18n="flipFront">Immer vorne</span>
           </label>
           <label class="radio-label">
             <input type="radio" name="flip-mode" value="both" id="flip-both" />
-            Beidseitig
+            <span data-i18n="flipBoth">Beidseitig</span>
           </label>
         </fieldset>
         <div class="dialog-actions">
-          <button type="button" id="cancel-vocab" class="btn-secondary">
+          <button type="button" id="cancel-vocab" class="btn-secondary" data-i18n="cancel">
             Abbrechen
           </button>
-          <button type="submit" class="btn-primary" id="vocab-submit-btn">
+          <button type="submit" class="btn-primary" id="vocab-submit-btn" data-i18n="add">
             Hinzufügen
           </button>
         </div>
@@ -227,7 +323,7 @@
         <h2 id="confirm-title"></h2>
         <p id="confirm-message" class="confirm-message"></p>
         <div class="dialog-actions">
-          <button type="submit" value="cancel" class="btn-secondary">
+          <button type="submit" value="cancel" class="btn-secondary" data-i18n="cancel">
             Abbrechen
           </button>
           <button
@@ -235,6 +331,7 @@
             value="confirm"
             class="btn-primary btn-danger"
             id="confirm-ok"
+            data-i18n="delete"
           >
             Löschen
           </button>
