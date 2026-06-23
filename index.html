@@ -48,7 +48,7 @@
           <button type="button" id="btn-back-learn" class="back-btn">
             ← Listen
           </button>
-          <p class="progress">
+          <p class="progress" id="learn-progress">
             <span id="card-index">1</span> / <span id="card-total">0</span>
           </p>
 
@@ -69,13 +69,19 @@
               </div>
             </div>
           </button>
-          <p class="hint">Klicke auf die Karte zum Umdrehen</p>
+          <p id="learn-flip-hint" class="hint">Klicke auf die Karte zum Umdrehen</p>
 
-          <div class="learn-actions">
+          <div id="learn-card-actions" class="learn-actions">
             <button type="button" id="btn-prev">← Zurück</button>
             <button type="button" id="btn-shuffle">Mischen</button>
-            <button type="button" id="btn-next">Weiter →</button>
+            <button type="button" id="btn-knew" class="btn-knew">Wusste ich</button>
+            <button type="button" id="btn-unknown" class="btn-unknown">
+              Wusste ich nicht
+            </button>
           </div>
+          <p id="learn-done" class="hint hidden">
+            Alle fälligen Vokabeln für heute erledigt.
+          </p>
         </div>
       </main>
     </div>

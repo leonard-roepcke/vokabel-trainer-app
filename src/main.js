@@ -50,8 +50,13 @@ const els = {
   cardIndex: document.getElementById("card-index"),
   cardTotal: document.getElementById("card-total"),
   btnPrev: document.getElementById("btn-prev"),
-  btnNext: document.getElementById("btn-next"),
   btnShuffle: document.getElementById("btn-shuffle"),
+  btnKnew: document.getElementById("btn-knew"),
+  btnUnknown: document.getElementById("btn-unknown"),
+  learnCardActions: document.getElementById("learn-card-actions"),
+  learnDone: document.getElementById("learn-done"),
+  learnProgress: document.getElementById("learn-progress"),
+  learnFlipHint: document.getElementById("learn-flip-hint"),
 };
 
 function loadData() {
@@ -70,6 +75,8 @@ function loadData() {
         front: v.front,
         back: v.back,
         flipMode: "both",
+        reviewInterval: 1,
+        nextReview: null,
       }));
       localStorage.removeItem(OLD_STORAGE_KEY);
       return {
@@ -88,11 +95,60 @@ function normalizeFlipMode(mode) {
   return "both";
 }
 
+function todayDateString() {
+  const now = new Date();
+  return formatDate(now);
+}
+
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateString(dateStr) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function addDaysToDateString(dateStr, days) {
+  const base = dateStr ? parseDateString(dateStr) : new Date();
+  base.setHours(0, 0, 0, 0);
+  const result = new Date(base.getTime() + days * 86_400_000);
+  return formatDate(result);
+}
+
+function formatReviewDate(dateStr) {
+  if (!dateStr) return "Neu";
+  const today = todayDateString();
+  if (dateStr <= today) return "Fällig";
+  const date = parseDateString(dateStr);
+  return `Ab ${date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}`;
+}
+
+function normalizeVocab(vocab) {
+  vocab.flipMode = normalizeFlipMode(vocab.flipMode);
+  vocab.reviewInterval =
+    typeof vocab.reviewInterval === "number" && vocab.reviewInterval > 0
+      ? vocab.reviewInterval
+      : 1;
+  vocab.nextReview =
+    typeof vocab.nextReview === "string" && vocab.nextReview ? vocab.nextReview : null;
+}
+
+function isVocabDue(vocab) {
+  if (!vocab.nextReview) return true;
+  return vocab.nextReview <= todayDateString();
+}
+
+function countDueVocabs(list) {
+  return list.vocabs.filter(isVocabDue).length;
+}
+
 function normalizeData(parsed) {
   parsed.lists?.forEach((list) => {
-    list.vocabs?.forEach((vocab) => {
-      vocab.flipMode = normalizeFlipMode(vocab.flipMode);
-    });
+    list.vocabs?.forEach(normalizeVocab);
   });
   return parsed;
 }
@@ -206,11 +262,16 @@ function renderLists() {
   data.lists.forEach((list) => {
     const li = document.createElement("li");
     li.className = "card list-card";
-    const learnDisabled = list.vocabs.length === 0 ? "disabled" : "";
+    const dueCount = countDueVocabs(list);
+    const learnDisabled = dueCount === 0 ? "disabled" : "";
+    const dueLabel =
+      dueCount > 0
+        ? `<span class="due-badge">${dueCount} fällig</span>`
+        : "";
     li.innerHTML = `
       <div class="card-body list-info">
         <strong>${escapeHtml(list.name)}</strong>
-        <span>${list.vocabs.length} Vokabel${list.vocabs.length === 1 ? "" : "n"}</span>
+        <span>${list.vocabs.length} Vokabel${list.vocabs.length === 1 ? "" : "n"} ${dueLabel}</span>
       </div>
       <div class="list-actions">
         <button type="button" class="icon-btn learn-btn" data-id="${list.id}" aria-label="Lernen" ${learnDisabled}>
@@ -243,6 +304,7 @@ function renderVocabs() {
         <strong>${escapeHtml(vocab.front)}</strong>
         <span>${escapeHtml(vocab.back)}</span>
         <span class="mode-badge">${FLIP_LABELS[normalizeFlipMode(vocab.flipMode)]}</span>
+        <span class="review-badge">${formatReviewDate(vocab.nextReview)}</span>
       </div>
       <div class="vocab-actions">
         <button type="button" class="icon-btn edit-btn" data-id="${vocab.id}" aria-label="Vokabel bearbeiten">
@@ -283,6 +345,8 @@ function addVocab(listId, front, back, flipMode) {
     front: front.trim(),
     back: back.trim(),
     flipMode: normalizeFlipMode(flipMode),
+    reviewInterval: 1,
+    nextReview: null,
   });
   saveData();
   renderVocabs();
@@ -316,17 +380,31 @@ function deleteVocab(listId, vocabId) {
 
 function startLearn(listId) {
   const list = getList(listId);
-  if (!list || list.vocabs.length === 0) return;
+  if (!list) return;
+
+  const dueVocabs = list.vocabs.filter(isVocabDue);
+  if (dueVocabs.length === 0) return;
 
   learnListId = listId;
-  learnOrder = list.vocabs.map((v) => v.id);
+  learnOrder = dueVocabs.map((v) => v.id);
   learnIndex = 0;
 
   els.listsOverview.classList.add("hidden");
   els.listDetail.classList.add("hidden");
   els.learnArea.classList.remove("hidden");
   setAppTitle(list.name);
-  showCard();
+  showLearnState();
+}
+
+function showLearnState() {
+  const hasCards = learnOrder.length > 0;
+  els.flashcard.classList.toggle("hidden", !hasCards);
+  els.learnCardActions.classList.toggle("hidden", !hasCards);
+  els.learnFlipHint.classList.toggle("hidden", !hasCards);
+  els.learnProgress.classList.toggle("hidden", !hasCards);
+  els.learnDone.classList.toggle("hidden", hasCards);
+
+  if (hasCards) showCard();
 }
 
 function getLearnVocabs() {
@@ -348,25 +426,46 @@ function showCard() {
   els.cardFront.textContent = vocab.front;
   els.cardBack.textContent = vocab.back;
   els.cardIndex.textContent = learnIndex + 1;
-  els.cardTotal.textContent = vocabs.length;
+  els.cardTotal.textContent = learnOrder.length;
   applyStartSide(vocab);
 }
 
-function nextCard() {
+function answerCard(knew) {
   const vocabs = getLearnVocabs();
-  learnIndex = (learnIndex + 1) % vocabs.length;
-  showCard();
+  const vocabId = learnOrder[learnIndex];
+  const vocab = vocabs.find((v) => v.id === vocabId);
+  if (!vocab) return;
+
+  if (knew) {
+    const intervalDays = vocab.reviewInterval;
+    const today = todayDateString();
+    const baseDate =
+      vocab.nextReview && vocab.nextReview > today ? vocab.nextReview : today;
+    vocab.nextReview = addDaysToDateString(baseDate, intervalDays);
+    vocab.reviewInterval *= 1.5;
+    learnOrder.splice(learnIndex, 1);
+    if (learnIndex >= learnOrder.length) learnIndex = 0;
+  } else {
+    vocab.reviewInterval = 1;
+    const [current] = learnOrder.splice(learnIndex, 1);
+    learnOrder.push(current);
+    if (learnIndex >= learnOrder.length) learnIndex = 0;
+  }
+
+  saveData();
+  renderLists();
+  if (currentListId === learnListId) renderVocabs();
+  showLearnState();
 }
 
 function prevCard() {
-  const vocabs = getLearnVocabs();
-  learnIndex = (learnIndex - 1 + vocabs.length) % vocabs.length;
+  if (learnOrder.length === 0) return;
+  learnIndex = (learnIndex - 1 + learnOrder.length) % learnOrder.length;
   showCard();
 }
 
 function shuffleCards() {
-  const vocabs = getLearnVocabs();
-  learnOrder = vocabs.map((v) => v.id);
+  if (learnOrder.length === 0) return;
   for (let i = learnOrder.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [learnOrder[i], learnOrder[j]] = [learnOrder[j], learnOrder[i]];
@@ -446,7 +545,8 @@ els.flashcard.addEventListener("click", () => {
   els.flashcard.classList.toggle("flipped");
 });
 
-els.btnNext.addEventListener("click", nextCard);
+els.btnKnew.addEventListener("click", () => answerCard(true));
+els.btnUnknown.addEventListener("click", () => answerCard(false));
 els.btnPrev.addEventListener("click", prevCard);
 els.btnShuffle.addEventListener("click", shuffleCards);
 
