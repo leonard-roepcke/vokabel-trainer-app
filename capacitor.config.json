@@ -1,0 +1,8 @@
+{
+  "appId": "de.vokabeltrainer.app",
+  "appName": "Vokabeltrainer",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": true
+  }
+}
