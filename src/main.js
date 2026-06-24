@@ -38,6 +38,7 @@ const els = {
   listsOverview: document.getElementById("lists-overview"),
   settingsArea: document.getElementById("settings-area"),
   settingDarkMode: document.getElementById("setting-dark-mode"),
+  settingShowListAnswers: document.getElementById("setting-show-list-answers"),
   settingLanguage: document.getElementById("setting-language"),
   listDetail: document.getElementById("list-detail"),
   listsList: document.getElementById("lists-list"),
@@ -105,13 +106,14 @@ function loadSettings() {
       const parsed = JSON.parse(stored);
       return {
         darkMode: Boolean(parsed.darkMode),
+        showListAnswers: parsed.showListAnswers !== false,
         language: parsed.language === "en" ? "en" : "de",
       };
     }
   } catch {
     /* ignore */
   }
-  return { darkMode: false, language: "de" };
+  return { darkMode: false, showListAnswers: true, language: "de" };
 }
 
 function saveSettings() {
@@ -274,6 +276,7 @@ function applySettings() {
   setLanguage(settings.language);
   document.title = t("appTitle");
   els.settingDarkMode.checked = settings.darkMode;
+  els.settingShowListAnswers.checked = settings.showListAnswers;
   els.settingLanguage.value = settings.language;
   applyStaticTranslations();
   refreshVisibleUi();
@@ -626,10 +629,13 @@ function renderVocabs() {
   list.vocabs.forEach((vocab) => {
     const li = document.createElement("li");
     li.className = "card vocab-card";
+    const backHtml = settings.showListAnswers
+      ? `<span>${escapeHtml(vocab.back)}</span>`
+      : "";
     li.innerHTML = `
       <div class="card-body vocab-text">
         <strong>${escapeHtml(vocab.front)}</strong>
-        <span>${escapeHtml(vocab.back)}</span>
+        ${backHtml}
         <div class="badge-row">
           <span class="badge">${escapeHtml(flipLabel(normalizeFlipMode(vocab.flipMode)))}</span>
           <span class="badge">${escapeHtml(formatReviewDate(vocab.nextReview))}</span>
@@ -845,6 +851,12 @@ els.settingDarkMode.addEventListener("change", () => {
   settings.darkMode = els.settingDarkMode.checked;
   saveSettings();
   applySettings();
+});
+
+els.settingShowListAnswers.addEventListener("change", () => {
+  settings.showListAnswers = els.settingShowListAnswers.checked;
+  saveSettings();
+  if (!els.listDetail.classList.contains("hidden")) renderVocabs();
 });
 
 els.settingLanguage.addEventListener("change", () => {
