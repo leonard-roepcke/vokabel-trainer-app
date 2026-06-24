@@ -25,6 +25,7 @@ let currentListId = null;
 let learnListId = null;
 let learnOrder = [];
 let learnIndex = 0;
+let learnPassedSides = {};
 
 const els = {
   appTitle: document.getElementById("app-title"),
@@ -713,6 +714,25 @@ function shuffleArray(items) {
   }
 }
 
+function buildLearnEntries(vocab) {
+  if (normalizeFlipMode(vocab.flipMode) === "both") {
+    return [
+      { vocabId: vocab.id, showBack: false },
+      { vocabId: vocab.id, showBack: true },
+    ];
+  }
+  return [{ vocabId: vocab.id, showBack: false }];
+}
+
+function scheduleReview(vocab) {
+  const intervalDays = vocab.reviewInterval;
+  const today = todayDateString();
+  const baseDate =
+    vocab.nextReview && vocab.nextReview > today ? vocab.nextReview : today;
+  vocab.nextReview = addDaysToDateString(baseDate, intervalDays);
+  vocab.reviewInterval *= 1.5;
+}
+
 function startLearn(listId) {
   const list = getList(listId);
   if (!list) return;
@@ -721,9 +741,10 @@ function startLearn(listId) {
   if (dueVocabs.length === 0) return;
 
   learnListId = listId;
-  learnOrder = dueVocabs.map((v) => v.id);
+  learnOrder = dueVocabs.flatMap(buildLearnEntries);
   shuffleArray(learnOrder);
   learnIndex = 0;
+  learnPassedSides = {};
 
   hideAllViews();
   els.learnArea.classList.remove("hidden");
@@ -751,44 +772,65 @@ function getLearnVocabs() {
   return list?.vocabs ?? [];
 }
 
-function applyStartSide(vocab) {
-  const mode = normalizeFlipMode(vocab.flipMode);
-  const showBack = mode === "both" && Math.random() < 0.5;
+function resetFlashcardFlip(showBack) {
+  els.flashcard.classList.add("no-transition");
   els.flashcard.classList.toggle("flipped", showBack);
+  void els.flashcard.offsetHeight;
+  els.flashcard.classList.remove("no-transition");
 }
 
 function showCard() {
+  const entry = learnOrder[learnIndex];
+  if (!entry) return;
+
   const vocabs = getLearnVocabs();
-  const vocab = vocabs.find((v) => v.id === learnOrder[learnIndex]);
+  const vocab = vocabs.find((v) => v.id === entry.vocabId);
   if (!vocab) return;
 
+  resetFlashcardFlip(entry.showBack);
   els.cardFront.textContent = vocab.front;
   els.cardBack.textContent = vocab.back;
   els.cardIndex.textContent = learnIndex + 1;
   els.cardTotal.textContent = learnOrder.length;
-  applyStartSide(vocab);
 }
 
 function answerCard(knew) {
+  const entry = learnOrder[learnIndex];
+  if (!entry) return;
+
   const vocabs = getLearnVocabs();
-  const vocabId = learnOrder[learnIndex];
+  const vocabId = entry.vocabId;
   const vocab = vocabs.find((v) => v.id === vocabId);
   if (!vocab) return;
 
+  const isBothMode = normalizeFlipMode(vocab.flipMode) === "both";
+  const sideKey = entry.showBack ? "back" : "front";
+
   if (knew) {
-    const intervalDays = vocab.reviewInterval;
-    const today = todayDateString();
-    const baseDate =
-      vocab.nextReview && vocab.nextReview > today ? vocab.nextReview : today;
-    vocab.nextReview = addDaysToDateString(baseDate, intervalDays);
-    vocab.reviewInterval *= 1.5;
+    if (isBothMode) {
+      if (!learnPassedSides[vocabId]) learnPassedSides[vocabId] = new Set();
+      learnPassedSides[vocabId].add(sideKey);
+      if (learnPassedSides[vocabId].size === 2) {
+        scheduleReview(vocab);
+        delete learnPassedSides[vocabId];
+      }
+    } else {
+      scheduleReview(vocab);
+    }
     learnOrder.splice(learnIndex, 1);
     if (learnIndex >= learnOrder.length) learnIndex = 0;
   } else {
     vocab.reviewInterval = 1;
-    const [current] = learnOrder.splice(learnIndex, 1);
-    learnOrder.push(current);
-    if (learnIndex >= learnOrder.length) learnIndex = 0;
+    delete learnPassedSides[vocabId];
+    if (isBothMode) {
+      learnOrder = learnOrder.filter((e) => e.vocabId !== vocabId);
+      learnOrder.push(...buildLearnEntries(vocab));
+      if (learnIndex >= learnOrder.length) learnIndex = 0;
+    } else {
+      const [current] = learnOrder.splice(learnIndex, 1);
+      learnOrder.push(current);
+      if (learnIndex >= learnOrder.length) learnIndex = 0;
+    }
   }
 
   saveData();
