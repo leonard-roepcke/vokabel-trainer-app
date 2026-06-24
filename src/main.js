@@ -720,6 +720,29 @@ function shuffleArray(items) {
   }
 }
 
+function arrangeLearnOrder(entries) {
+  if (entries.length <= 1) return [...entries];
+
+  const pool = [...entries];
+  shuffleArray(pool);
+  const result = [];
+
+  while (pool.length > 0) {
+    const lastVocabId = result.length > 0 ? result[result.length - 1].vocabId : null;
+    const candidates = pool
+      .map((entry, index) => index)
+      .filter((index) => pool[index].vocabId !== lastVocabId);
+    const picked =
+      candidates.length > 0
+        ? candidates[Math.floor(Math.random() * candidates.length)]
+        : 0;
+    result.push(pool[picked]);
+    pool.splice(picked, 1);
+  }
+
+  return result;
+}
+
 function buildLearnEntries(vocab) {
   if (normalizeFlipMode(vocab.flipMode) === "both") {
     return [
@@ -747,8 +770,7 @@ function startLearn(listId) {
   if (dueVocabs.length === 0) return;
 
   learnListId = listId;
-  learnOrder = dueVocabs.flatMap(buildLearnEntries);
-  shuffleArray(learnOrder);
+  learnOrder = arrangeLearnOrder(dueVocabs.flatMap(buildLearnEntries));
   learnIndex = 0;
   learnPassedSides = {};
 
@@ -829,8 +851,10 @@ function answerCard(knew) {
     vocab.reviewInterval = 1;
     delete learnPassedSides[vocabId];
     if (isBothMode) {
-      learnOrder = learnOrder.filter((e) => e.vocabId !== vocabId);
-      learnOrder.push(...buildLearnEntries(vocab));
+      learnOrder = arrangeLearnOrder([
+        ...learnOrder.filter((e) => e.vocabId !== vocabId),
+        ...buildLearnEntries(vocab),
+      ]);
       if (learnIndex >= learnOrder.length) learnIndex = 0;
     } else {
       const [current] = learnOrder.splice(learnIndex, 1);
