@@ -288,21 +288,54 @@
           <input
             type="text"
             id="input-front"
-            required
             data-i18n-placeholder="frontPlaceholder"
             placeholder="z.B. Haus"
           />
+          <div class="vocab-image-field">
+            <input type="file" id="input-front-image" accept="image/*" class="hidden" />
+            <div class="vocab-image-actions">
+              <button type="button" id="btn-front-image" class="btn-secondary btn-small" data-i18n="addPhoto">
+                Foto hinzufügen
+              </button>
+              <button
+                type="button"
+                id="btn-remove-front-image"
+                class="btn-secondary btn-small hidden"
+                data-i18n="removePhoto"
+              >
+                Foto entfernen
+              </button>
+            </div>
+            <div id="preview-front-image" class="vocab-image-preview hidden"></div>
+          </div>
         </label>
         <label>
           <span data-i18n="back">Rückseite</span>
           <input
             type="text"
             id="input-back"
-            required
             data-i18n-placeholder="backPlaceholder"
             placeholder="z.B. house"
           />
+          <div class="vocab-image-field">
+            <input type="file" id="input-back-image" accept="image/*" class="hidden" />
+            <div class="vocab-image-actions">
+              <button type="button" id="btn-back-image" class="btn-secondary btn-small" data-i18n="addPhoto">
+                Foto hinzufügen
+              </button>
+              <button
+                type="button"
+                id="btn-remove-back-image"
+                class="btn-secondary btn-small hidden"
+                data-i18n="removePhoto"
+              >
+                Foto entfernen
+              </button>
+            </div>
+            <div id="preview-back-image" class="vocab-image-preview hidden"></div>
+          </div>
         </label>
+        <p id="vocab-form-error" class="dialog-error hidden"></p>
         <fieldset class="flip-choice">
           <legend data-i18n="flipModeLegend">Anzeige beim Lernen</legend>
           <label class="radio-label">

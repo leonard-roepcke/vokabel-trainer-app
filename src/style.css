@@ -673,3 +673,53 @@ dialog textarea:focus {
 .dialog-actions-stack .btn-secondary {
   width: 100%;
 }
+
+.btn-small {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.vocab-image-field {
+  margin-top: 0.5rem;
+}
+
+.vocab-image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.vocab-image-preview {
+  margin-top: 0.5rem;
+}
+
+.vocab-image-preview img,
+.vocab-thumb,
+.card-side-image {
+  display: block;
+  max-width: 100%;
+  max-height: 120px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.card-side-image {
+  max-height: 140px;
+  margin: 0 auto 0.5rem;
+}
+
+.flashcard p {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vocab-text .vocab-side-text {
+  display: block;
+}
+
+.vocab-text .vocab-thumb {
+  margin-top: 0.35rem;
+  max-height: 48px;
+}

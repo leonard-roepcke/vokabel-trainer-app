@@ -6,6 +6,7 @@ import {
   t,
   vocabCountLabel,
 } from "./i18n.js";
+import { processImageFile } from "./images.js";
 
 const STORAGE_KEY = "vokabel-trainer-data";
 const SETTINGS_KEY = "vokabel-trainer-settings";
@@ -26,6 +27,8 @@ let learnListId = null;
 let learnOrder = [];
 let learnIndex = 0;
 let learnPassedSides = {};
+let dialogFrontImage = null;
+let dialogBackImage = null;
 
 const els = {
   appTitle: document.getElementById("app-title"),
@@ -73,6 +76,15 @@ const els = {
   editVocabId: document.getElementById("edit-vocab-id"),
   inputFront: document.getElementById("input-front"),
   inputBack: document.getElementById("input-back"),
+  inputFrontImage: document.getElementById("input-front-image"),
+  inputBackImage: document.getElementById("input-back-image"),
+  btnFrontImage: document.getElementById("btn-front-image"),
+  btnBackImage: document.getElementById("btn-back-image"),
+  btnRemoveFrontImage: document.getElementById("btn-remove-front-image"),
+  btnRemoveBackImage: document.getElementById("btn-remove-back-image"),
+  previewFrontImage: document.getElementById("preview-front-image"),
+  previewBackImage: document.getElementById("preview-back-image"),
+  vocabFormError: document.getElementById("vocab-form-error"),
   flipFront: document.getElementById("flip-front"),
   flipBoth: document.getElementById("flip-both"),
   cancelVocab: document.getElementById("cancel-vocab"),
@@ -198,6 +210,11 @@ function formatReviewDate(dateStr) {
   });
 }
 
+function normalizeImageField(value) {
+  if (typeof value !== "string" || !value.startsWith("data:image/")) return null;
+  return value;
+}
+
 function normalizeVocab(vocab) {
   vocab.flipMode = normalizeFlipMode(vocab.flipMode);
   vocab.reviewInterval =
@@ -206,6 +223,19 @@ function normalizeVocab(vocab) {
       : 1;
   vocab.nextReview =
     typeof vocab.nextReview === "string" && vocab.nextReview ? vocab.nextReview : null;
+  vocab.frontImage = normalizeImageField(vocab.frontImage);
+  vocab.backImage = normalizeImageField(vocab.backImage);
+}
+
+function hasVocabSideContent(text, image) {
+  return Boolean(String(text ?? "").trim() || image);
+}
+
+function isValidVocabContent(vocab) {
+  return (
+    hasVocabSideContent(vocab.front, vocab.frontImage) &&
+    hasVocabSideContent(vocab.back, vocab.backImage)
+  );
 }
 
 function isVocabDue(vocab) {
@@ -236,6 +266,80 @@ function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
+}
+
+function vocabSidePreviewHtml(text, image, { primary = false } = {}) {
+  const parts = [];
+  const trimmed = String(text ?? "").trim();
+  if (trimmed) {
+    const tag = primary ? "strong" : "span";
+    const className = primary ? "" : ' class="vocab-side-text"';
+    parts.push(`<${tag}${className}>${escapeHtml(trimmed)}</${tag}>`);
+  }
+  if (image) {
+    parts.push(
+      `<img class="vocab-thumb" src="${image}" alt="${escapeHtml(t("photoAlt"))}" />`,
+    );
+  }
+  return parts.join("");
+}
+
+function setCardSideContent(element, text, image) {
+  element.innerHTML = "";
+  if (image) {
+    const img = document.createElement("img");
+    img.src = image;
+    img.alt = t("photoAlt");
+    img.className = "card-side-image";
+    element.appendChild(img);
+  }
+  const trimmed = String(text ?? "").trim();
+  if (trimmed) {
+    const span = document.createElement("span");
+    span.textContent = trimmed;
+    element.appendChild(span);
+  }
+}
+
+function updateDialogImagePreview(side) {
+  const isFront = side === "front";
+  const image = isFront ? dialogFrontImage : dialogBackImage;
+  const preview = isFront ? els.previewFrontImage : els.previewBackImage;
+  const removeBtn = isFront ? els.btnRemoveFrontImage : els.btnRemoveBackImage;
+
+  if (image) {
+    preview.innerHTML = `<img src="${image}" alt="${escapeHtml(t("photoAlt"))}" />`;
+    preview.classList.remove("hidden");
+    removeBtn.classList.remove("hidden");
+  } else {
+    preview.innerHTML = "";
+    preview.classList.add("hidden");
+    removeBtn.classList.add("hidden");
+  }
+}
+
+function resetDialogImages(frontImage = null, backImage = null) {
+  dialogFrontImage = frontImage;
+  dialogBackImage = backImage;
+  els.inputFrontImage.value = "";
+  els.inputBackImage.value = "";
+  updateDialogImagePreview("front");
+  updateDialogImagePreview("back");
+}
+
+async function handleDialogImagePick(side, file) {
+  if (!file) return;
+
+  try {
+    const dataUrl = await processImageFile(file);
+    if (side === "front") dialogFrontImage = dataUrl;
+    else dialogBackImage = dataUrl;
+    updateDialogImagePreview(side);
+    els.vocabFormError.classList.add("hidden");
+  } catch {
+    els.vocabFormError.textContent = t("photoLoadFailed");
+    els.vocabFormError.classList.remove("hidden");
+  }
 }
 
 function setAppTitle(title) {
@@ -364,7 +468,6 @@ function parseImportedListText(text) {
     .map((vocab) => {
       const front = String(vocab?.front ?? "").trim();
       const back = String(vocab?.back ?? "").trim();
-      if (!front || !back) return null;
 
       const imported = {
         id: crypto.randomUUID(),
@@ -375,6 +478,7 @@ function parseImportedListText(text) {
         nextReview: vocab.nextReview ?? null,
       };
       normalizeVocab(imported);
+      if (!isValidVocabContent(imported)) return null;
       return imported;
     })
     .filter(Boolean);
@@ -525,6 +629,9 @@ function positionDialogForKeyboard(dialog) {
 }
 
 function openVocabDialog(vocab = null) {
+  els.vocabFormError.textContent = "";
+  els.vocabFormError.classList.add("hidden");
+
   if (vocab) {
     els.vocabDialogTitle.textContent = t("editVocab");
     els.vocabSubmitBtn.textContent = t("save");
@@ -532,6 +639,7 @@ function openVocabDialog(vocab = null) {
     els.inputFront.value = vocab.front;
     els.inputBack.value = vocab.back;
     setFlipModeRadio(vocab.flipMode);
+    resetDialogImages(vocab.frontImage ?? null, vocab.backImage ?? null);
   } else {
     els.vocabDialogTitle.textContent = t("newVocab");
     els.vocabSubmitBtn.textContent = t("add");
@@ -539,8 +647,10 @@ function openVocabDialog(vocab = null) {
     els.inputFront.value = "";
     els.inputBack.value = "";
     setFlipModeRadio("front");
+    resetDialogImages();
   }
 
+  applyStaticTranslations(els.dialogVocab);
   els.dialogVocab.showModal();
   positionDialogForKeyboard(els.dialogVocab);
   els.inputFront.focus();
@@ -630,11 +740,11 @@ function renderVocabs() {
     const li = document.createElement("li");
     li.className = "card vocab-card";
     const backHtml = settings.showListAnswers
-      ? `<span>${escapeHtml(vocab.back)}</span>`
+      ? vocabSidePreviewHtml(vocab.back, vocab.backImage)
       : "";
     li.innerHTML = `
       <div class="card-body vocab-text">
-        <strong>${escapeHtml(vocab.front)}</strong>
+        ${vocabSidePreviewHtml(vocab.front, vocab.frontImage, { primary: true })}
         ${backHtml}
         <div class="badge-row">
           <span class="badge">${escapeHtml(flipLabel(normalizeFlipMode(vocab.flipMode)))}</span>
@@ -671,24 +781,30 @@ function deleteList(id) {
   else renderLists();
 }
 
-function addVocab(listId, front, back, flipMode) {
+function addVocab(listId, front, back, flipMode, frontImage, backImage) {
   const list = getList(listId);
   if (!list) return;
 
-  list.vocabs.push({
+  const vocab = {
     id: crypto.randomUUID(),
     front: front.trim(),
     back: back.trim(),
     flipMode: normalizeFlipMode(flipMode),
     reviewInterval: 1,
     nextReview: null,
-  });
+    frontImage: frontImage ?? null,
+    backImage: backImage ?? null,
+  };
+  normalizeVocab(vocab);
+  if (!isValidVocabContent(vocab)) return;
+
+  list.vocabs.push(vocab);
   saveData();
   renderVocabs();
   renderLists();
 }
 
-function updateVocab(listId, vocabId, front, back, flipMode) {
+function updateVocab(listId, vocabId, front, back, flipMode, frontImage, backImage) {
   const list = getList(listId);
   if (!list) return;
 
@@ -698,6 +814,11 @@ function updateVocab(listId, vocabId, front, back, flipMode) {
   vocab.front = front.trim();
   vocab.back = back.trim();
   vocab.flipMode = normalizeFlipMode(flipMode);
+  vocab.frontImage = frontImage ?? null;
+  vocab.backImage = backImage ?? null;
+  normalizeVocab(vocab);
+  if (!isValidVocabContent(vocab)) return;
+
   saveData();
   renderVocabs();
   renderLists();
@@ -816,8 +937,8 @@ function showCard() {
   if (!vocab) return;
 
   resetFlashcardFlip(entry.showBack);
-  els.cardFront.textContent = vocab.front;
-  els.cardBack.textContent = vocab.back;
+  setCardSideContent(els.cardFront, vocab.front, vocab.frontImage);
+  setCardSideContent(els.cardBack, vocab.back, vocab.backImage);
   els.cardIndex.textContent = learnIndex + 1;
   els.cardTotal.textContent = learnOrder.length;
 }
@@ -963,6 +1084,29 @@ els.btnShareList.addEventListener("click", () => shareCurrentList());
 
 els.cancelVocab.addEventListener("click", () => els.dialogVocab.close());
 
+els.btnFrontImage.addEventListener("click", () => els.inputFrontImage.click());
+els.btnBackImage.addEventListener("click", () => els.inputBackImage.click());
+
+els.btnRemoveFrontImage.addEventListener("click", () => {
+  dialogFrontImage = null;
+  els.inputFrontImage.value = "";
+  updateDialogImagePreview("front");
+});
+
+els.btnRemoveBackImage.addEventListener("click", () => {
+  dialogBackImage = null;
+  els.inputBackImage.value = "";
+  updateDialogImagePreview("back");
+});
+
+els.inputFrontImage.addEventListener("change", () => {
+  handleDialogImagePick("front", els.inputFrontImage.files?.[0]);
+});
+
+els.inputBackImage.addEventListener("change", () => {
+  handleDialogImagePick("back", els.inputBackImage.files?.[0]);
+});
+
 els.vocabForm.addEventListener("submit", (e) => {
   e.preventDefault();
   if (!currentListId) return;
@@ -972,10 +1116,27 @@ els.vocabForm.addEventListener("submit", (e) => {
   const flipMode = getSelectedFlipMode();
   const editId = els.editVocabId.value;
 
+  if (
+    !hasVocabSideContent(front, dialogFrontImage) ||
+    !hasVocabSideContent(back, dialogBackImage)
+  ) {
+    els.vocabFormError.textContent = t("vocabSideRequired");
+    els.vocabFormError.classList.remove("hidden");
+    return;
+  }
+
   if (editId) {
-    updateVocab(currentListId, editId, front, back, flipMode);
+    updateVocab(
+      currentListId,
+      editId,
+      front,
+      back,
+      flipMode,
+      dialogFrontImage,
+      dialogBackImage,
+    );
   } else {
-    addVocab(currentListId, front, back, flipMode);
+    addVocab(currentListId, front, back, flipMode, dialogFrontImage, dialogBackImage);
   }
 
   els.dialogVocab.close();
