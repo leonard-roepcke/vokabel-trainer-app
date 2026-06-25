@@ -183,6 +183,9 @@
         <p class="confirm-message" data-i18n="shareProgressMessage">
           Soll der Lernfortschritt mit in die geteilten Listendaten?
         </p>
+        <p class="confirm-message share-images-note hidden" id="share-images-note" data-i18n="shareIncludesImagesNote">
+          Enthaltene Fotos werden in die geteilten Daten eingebettet.
+        </p>
         <div class="dialog-actions dialog-actions-stack">
           <button type="button" id="cancel-share-list" class="btn-secondary" data-i18n="cancel">
             Abbrechen
@@ -201,10 +204,13 @@
       <form id="import-list-form" method="dialog">
         <h2 data-i18n="importListTitle">Liste importieren</h2>
         <label>
-          <span data-i18n="pasteListData">Listendaten einfügen</span>
+          <span data-i18n="importFromFile">JSON-Datei auswählen</span>
+          <input type="file" id="input-import-file" accept=".json,application/json" />
+        </label>
+        <label>
+          <span data-i18n="importOrPaste">oder Listendaten einfügen</span>
           <textarea
             id="input-import-list"
-            required
             rows="8"
             placeholder='{"name":"Englisch","vocabs":[...]}'
           ></textarea>

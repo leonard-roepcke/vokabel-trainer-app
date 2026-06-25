@@ -67,6 +67,11 @@ const STRINGS = {
     shareWithoutProgress: "Ohne Lernfortschritt",
     shareCopied: "Die Listendaten wurden in die Zwischenablage kopiert.",
     shareFailed: "Die Listendaten konnten nicht geteilt werden. Bitte versuche es erneut.",
+    shareFileDownloaded:
+      "Die Listendaten mit Fotos wurden als Datei heruntergeladen. Diese Datei kann geteilt und importiert werden.",
+    shareIncludesImagesNote: "Enthaltene Fotos werden in die geteilten Daten eingebettet.",
+    importFromFile: "JSON-Datei auswählen",
+    importOrPaste: "oder Listendaten einfügen",
     importInvalidJson: "Ungültiges JSON. Bitte das komplette Listendaten-Format einfügen.",
     importSingleList: "Es muss genau eine Liste im Datenformat enthalten sein.",
     importInvalidFormat: "Unbekanntes Format. Erwartet wird eine Liste mit name und vocabs.",
@@ -145,6 +150,11 @@ const STRINGS = {
     shareWithoutProgress: "Without progress",
     shareCopied: "List data was copied to the clipboard.",
     shareFailed: "List data could not be shared. Please try again.",
+    shareFileDownloaded:
+      "List data with photos was downloaded as a file. You can share and import this file.",
+    shareIncludesImagesNote: "Included photos are embedded in the shared data.",
+    importFromFile: "Choose JSON file",
+    importOrPaste: "or paste list data",
     importInvalidJson: "Invalid JSON. Please paste the complete list data format.",
     importSingleList: "The data must contain exactly one list.",
     importInvalidFormat: "Unknown format. Expected a list with name and vocabs.",

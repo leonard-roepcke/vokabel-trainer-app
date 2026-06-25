@@ -55,10 +55,12 @@ const els = {
   btnAddVocab: document.getElementById("btn-add-vocab"),
   dialogShareList: document.getElementById("dialog-share-list"),
   shareListForm: document.getElementById("share-list-form"),
+  shareImagesNote: document.getElementById("share-images-note"),
   cancelShareList: document.getElementById("cancel-share-list"),
   dialogImportList: document.getElementById("dialog-import-list"),
   importListForm: document.getElementById("import-list-form"),
   inputImportList: document.getElementById("input-import-list"),
+  inputImportFile: document.getElementById("input-import-file"),
   importError: document.getElementById("import-error"),
   cancelImportList: document.getElementById("cancel-import-list"),
   dialogAddList: document.getElementById("dialog-add-list"),
@@ -413,6 +415,28 @@ function openRenameListDialog() {
   els.inputRenameList.select();
 }
 
+function listHasImages(list) {
+  return list.vocabs.some((vocab) => vocab.frontImage || vocab.backImage);
+}
+
+function sanitizeFileName(name) {
+  const cleaned = String(name ?? "liste")
+    .trim()
+    .replace(/[^\w\s-äöüÄÖÜß]/g, "")
+    .replace(/\s+/g, "-")
+    .slice(0, 60);
+  return cleaned || "liste";
+}
+
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function cloneListForExport(list, includeProgress) {
   return {
     id: list.id,
@@ -426,6 +450,8 @@ function cloneListForExport(list, includeProgress) {
         reviewInterval: includeProgress ? vocab.reviewInterval : 1,
         nextReview: includeProgress ? vocab.nextReview : null,
       };
+      if (vocab.frontImage) exported.frontImage = vocab.frontImage;
+      if (vocab.backImage) exported.backImage = vocab.backImage;
       if (!includeProgress) normalizeVocab(exported);
       return exported;
     }),
@@ -476,6 +502,8 @@ function parseImportedListText(text) {
         flipMode: normalizeFlipMode(vocab.flipMode),
         reviewInterval: vocab.reviewInterval,
         nextReview: vocab.nextReview ?? null,
+        frontImage: normalizeImageField(vocab?.frontImage),
+        backImage: normalizeImageField(vocab?.backImage),
       };
       normalizeVocab(imported);
       if (!isValidVocabContent(imported)) return null;
@@ -502,8 +530,9 @@ function importListFromText(text) {
   return list;
 }
 
-function openShareListDialog() {
+function openShareListDialog(list) {
   applyStaticTranslations(els.dialogShareList);
+  els.shareImagesNote.classList.toggle("hidden", !listHasImages(list));
   els.dialogShareList.showModal();
   return new Promise((resolve) => {
     els.dialogShareList.addEventListener(
@@ -521,21 +550,44 @@ function openShareListDialog() {
 
 async function shareListData(list, includeProgress) {
   const text = serializeListForExport(list, includeProgress);
+  const fileName = `${sanitizeFileName(list.name)}.json`;
+  const blob = new Blob([text], { type: "application/json" });
+  const file = new File([blob], fileName, { type: "application/json" });
+  const hasImages = listHasImages(list);
+  const preferFile = hasImages || text.length > 500_000;
 
   if (navigator.share) {
-    try {
-      await navigator.share({ title: list.name, text });
-      return;
-    } catch (error) {
-      if (error.name === "AbortError") return;
+    if (preferFile && navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ title: list.name, files: [file] });
+        return;
+      } catch (error) {
+        if (error.name === "AbortError") return;
+      }
     }
+
+    if (!preferFile) {
+      try {
+        await navigator.share({ title: list.name, text });
+        return;
+      } catch (error) {
+        if (error.name === "AbortError") return;
+      }
+    }
+  }
+
+  if (preferFile) {
+    downloadBlob(blob, fileName);
+    window.alert(t("shareFileDownloaded"));
+    return;
   }
 
   try {
     await navigator.clipboard.writeText(text);
     window.alert(t("shareCopied"));
   } catch {
-    window.alert(t("shareFailed"));
+    downloadBlob(blob, fileName);
+    window.alert(t("shareFileDownloaded"));
   }
 }
 
@@ -544,18 +596,20 @@ async function shareCurrentList() {
   const list = getList(currentListId);
   if (!list) return;
 
-  const includeProgress = await openShareListDialog();
+  const includeProgress = await openShareListDialog(list);
   if (includeProgress === null) return;
   await shareListData(list, includeProgress);
 }
 
 function openImportListDialog() {
   els.inputImportList.value = "";
+  els.inputImportFile.value = "";
   els.importError.textContent = "";
   els.importError.classList.add("hidden");
+  applyStaticTranslations(els.dialogImportList);
   els.dialogImportList.showModal();
   positionDialogForKeyboard(els.dialogImportList);
-  els.inputImportList.focus();
+  els.inputImportFile.focus();
 }
 
 function renameList(id, name) {
@@ -1025,11 +1079,33 @@ els.importListForm.addEventListener("submit", (e) => {
   els.importError.textContent = "";
   els.importError.classList.add("hidden");
 
+  const text = els.inputImportList.value.trim();
+  if (!text) {
+    els.importError.textContent = t("importInvalidJson");
+    els.importError.classList.remove("hidden");
+    return;
+  }
+
   try {
-    importListFromText(els.inputImportList.value);
+    importListFromText(text);
     els.dialogImportList.close();
   } catch (error) {
     els.importError.textContent = error.message;
+    els.importError.classList.remove("hidden");
+  }
+});
+
+els.inputImportFile.addEventListener("change", async () => {
+  const file = els.inputImportFile.files?.[0];
+  if (!file) return;
+
+  els.importError.textContent = "";
+  els.importError.classList.add("hidden");
+
+  try {
+    els.inputImportList.value = await file.text();
+  } catch {
+    els.importError.textContent = t("importInvalidJson");
     els.importError.classList.remove("hidden");
   }
 });
