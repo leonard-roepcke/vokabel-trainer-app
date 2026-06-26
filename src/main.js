@@ -7,6 +7,7 @@ import {
   vocabCountLabel,
 } from "./i18n.js";
 import { processImageFile } from "./images.js";
+import { shareListJsonFile } from "./exportList.js";
 
 const STORAGE_KEY = "vokabel-trainer-data";
 const SETTINGS_KEY = "vokabel-trainer-settings";
@@ -55,7 +56,6 @@ const els = {
   btnAddVocab: document.getElementById("btn-add-vocab"),
   dialogShareList: document.getElementById("dialog-share-list"),
   shareListForm: document.getElementById("share-list-form"),
-  shareImagesNote: document.getElementById("share-images-note"),
   cancelShareList: document.getElementById("cancel-share-list"),
   dialogImportList: document.getElementById("dialog-import-list"),
   importListForm: document.getElementById("import-list-form"),
@@ -415,10 +415,6 @@ function openRenameListDialog() {
   els.inputRenameList.select();
 }
 
-function listHasImages(list) {
-  return list.vocabs.some((vocab) => vocab.frontImage || vocab.backImage);
-}
-
 function sanitizeFileName(name) {
   const cleaned = String(name ?? "liste")
     .trim()
@@ -426,15 +422,6 @@ function sanitizeFileName(name) {
     .replace(/\s+/g, "-")
     .slice(0, 60);
   return cleaned || "liste";
-}
-
-function downloadBlob(blob, fileName) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  link.click();
-  URL.revokeObjectURL(url);
 }
 
 function cloneListForExport(list, includeProgress) {
@@ -530,9 +517,8 @@ function importListFromText(text) {
   return list;
 }
 
-function openShareListDialog(list) {
+function openShareListDialog() {
   applyStaticTranslations(els.dialogShareList);
-  els.shareImagesNote.classList.toggle("hidden", !listHasImages(list));
   els.dialogShareList.showModal();
   return new Promise((resolve) => {
     els.dialogShareList.addEventListener(
@@ -549,46 +535,14 @@ function openShareListDialog(list) {
 }
 
 async function shareListData(list, includeProgress) {
-  const text = serializeListForExport(list, includeProgress);
+  const jsonText = serializeListForExport(list, includeProgress);
   const fileName = `${sanitizeFileName(list.name)}.json`;
-  const blob = new Blob([text], { type: "application/json" });
-  const file = new File([blob], fileName, { type: "application/json" });
-  const hasImages = listHasImages(list);
-  const preferFile = hasImages || text.length > 500_000;
-
-  if (navigator.share) {
-    if (preferFile && navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({ title: list.name, files: [file] });
-        return;
-      } catch (error) {
-        if (error.name === "AbortError") return;
-      }
-    }
-
-    if (!preferFile) {
-      try {
-        await navigator.share({ title: list.name, text });
-        return;
-      } catch (error) {
-        if (error.name === "AbortError") return;
-      }
-    }
-  }
-
-  if (preferFile) {
-    downloadBlob(blob, fileName);
-    window.alert(t("shareFileDownloaded"));
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText(text);
-    window.alert(t("shareCopied"));
-  } catch {
-    downloadBlob(blob, fileName);
-    window.alert(t("shareFileDownloaded"));
-  }
+  await shareListJsonFile({
+    fileName,
+    jsonText,
+    title: list.name,
+    t,
+  });
 }
 
 async function shareCurrentList() {
@@ -596,7 +550,7 @@ async function shareCurrentList() {
   const list = getList(currentListId);
   if (!list) return;
 
-  const includeProgress = await openShareListDialog(list);
+  const includeProgress = await openShareListDialog();
   if (includeProgress === null) return;
   await shareListData(list, includeProgress);
 }

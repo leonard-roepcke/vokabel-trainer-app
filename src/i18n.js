@@ -65,11 +65,11 @@ const STRINGS = {
     shareProgressMessage: "Soll der Lernfortschritt mit in die geteilten Listendaten?",
     shareWithProgress: "Mit Lernfortschritt",
     shareWithoutProgress: "Ohne Lernfortschritt",
-    shareCopied: "Die Listendaten wurden in die Zwischenablage kopiert.",
-    shareFailed: "Die Listendaten konnten nicht geteilt werden. Bitte versuche es erneut.",
-    shareFileDownloaded:
-      "Die Listendaten mit Fotos wurden als Datei heruntergeladen. Diese Datei kann geteilt und importiert werden.",
-    shareIncludesImagesNote: "Enthaltene Fotos werden in die geteilten Daten eingebettet.",
+    shareJsonNote: "Die Liste wird immer als JSON-Datei exportiert (inkl. Fotos).",
+    shareFileDownloaded: "Die JSON-Datei „{fileName}“ wurde heruntergeladen.",
+    shareFileSaved:
+      "Die JSON-Datei „{fileName}“ wurde gespeichert (Ordner Vokabeltrainer). Du kannst sie über das Teilen-Menü weitergeben.",
+    shareFailed: "Die JSON-Datei konnte nicht exportiert werden. Bitte versuche es erneut.",
     importFromFile: "JSON-Datei auswählen",
     importOrPaste: "oder Listendaten einfügen",
     importInvalidJson: "Ungültiges JSON. Bitte das komplette Listendaten-Format einfügen.",
@@ -148,11 +148,11 @@ const STRINGS = {
     shareProgressMessage: "Should learning progress be included in the shared list data?",
     shareWithProgress: "With progress",
     shareWithoutProgress: "Without progress",
-    shareCopied: "List data was copied to the clipboard.",
-    shareFailed: "List data could not be shared. Please try again.",
-    shareFileDownloaded:
-      "List data with photos was downloaded as a file. You can share and import this file.",
-    shareIncludesImagesNote: "Included photos are embedded in the shared data.",
+    shareJsonNote: "The list is always exported as a JSON file (including photos).",
+    shareFileDownloaded: "The JSON file \"{fileName}\" was downloaded.",
+    shareFileSaved:
+      "The JSON file \"{fileName}\" was saved (Vokabeltrainer folder). You can share it from the share menu.",
+    shareFailed: "The JSON file could not be exported. Please try again.",
     importFromFile: "Choose JSON file",
     importOrPaste: "or paste list data",
     importInvalidJson: "Invalid JSON. Please paste the complete list data format.",
