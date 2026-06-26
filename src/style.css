@@ -666,13 +666,6 @@ dialog input[type="text"] {
   color: var(--text);
 }
 
-dialog input[type="file"] {
-  display: block;
-  width: 100%;
-  margin-top: 0.25rem;
-  font-size: 0.85rem;
-}
-
 dialog input[type="text"]:focus {
   outline: 2px solid var(--primary);
   border-color: transparent;
