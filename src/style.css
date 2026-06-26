@@ -775,9 +775,6 @@ dialog textarea:focus {
 }
 
 .vocab-image-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
   margin-top: 0.5rem;
 }
 
@@ -817,6 +814,12 @@ dialog textarea:focus {
   flex-shrink: 0;
 }
 
+.vocab-image-has {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .vocab-image-thumb {
   width: 2.75rem;
   height: 2.75rem;
@@ -825,6 +828,28 @@ dialog textarea:focus {
   flex-shrink: 0;
   border: 1px solid var(--border-subtle);
   background: var(--card-bg-alt);
+}
+
+.vocab-photo-delete-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--btn-secondary-bg);
+  color: var(--danger-text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.vocab-photo-delete-btn:hover {
+  border-color: var(--danger-text);
+  background: var(--danger-bg);
 }
 
 .card-side-image {

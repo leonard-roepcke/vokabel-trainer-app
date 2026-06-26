@@ -84,8 +84,14 @@ const els = {
   inputBackPhoto: document.getElementById("input-back-photo"),
   btnFrontPhoto: document.getElementById("btn-front-photo"),
   btnBackPhoto: document.getElementById("btn-back-photo"),
+  frontImageAdd: document.getElementById("front-image-add"),
+  frontImageHas: document.getElementById("front-image-has"),
+  backImageAdd: document.getElementById("back-image-add"),
+  backImageHas: document.getElementById("back-image-has"),
   thumbFrontImage: document.getElementById("thumb-front-image"),
   thumbBackImage: document.getElementById("thumb-back-image"),
+  btnRemoveFrontImage: document.getElementById("btn-remove-front-image"),
+  btnRemoveBackImage: document.getElementById("btn-remove-back-image"),
   vocabFormError: document.getElementById("vocab-form-error"),
   flipFront: document.getElementById("flip-front"),
   flipBoth: document.getElementById("flip-both"),
@@ -303,15 +309,29 @@ function setCardSideContent(element, text, image) {
   }
 }
 
+function getImageSideElements(side) {
+  const isFront = side === "front";
+  return {
+    addBlock: isFront ? els.frontImageAdd : els.backImageAdd,
+    hasBlock: isFront ? els.frontImageHas : els.backImageHas,
+    thumb: isFront ? els.thumbFrontImage : els.thumbBackImage,
+    photoInput: isFront ? els.inputFrontPhoto : els.inputBackPhoto,
+  };
+}
+
 function updateDialogImagePreview(side) {
   const image = side === "front" ? dialogFrontImage : dialogBackImage;
-  const thumb = side === "front" ? els.thumbFrontImage : els.thumbBackImage;
+  const { addBlock, hasBlock, thumb } = getImageSideElements(side);
 
   if (image) {
+    addBlock.classList.add("hidden");
+    hasBlock.classList.remove("hidden");
     thumb.src = image;
     thumb.alt = t("photoAlt");
     thumb.classList.remove("hidden");
   } else {
+    addBlock.classList.remove("hidden");
+    hasBlock.classList.add("hidden");
     thumb.removeAttribute("src");
     thumb.alt = "";
     thumb.classList.add("hidden");
@@ -1109,6 +1129,18 @@ els.cancelVocab.addEventListener("click", () => els.dialogVocab.close());
 
 els.btnFrontPhoto.addEventListener("click", () => els.inputFrontPhoto.click());
 els.btnBackPhoto.addEventListener("click", () => els.inputBackPhoto.click());
+
+els.btnRemoveFrontImage.addEventListener("click", () => {
+  dialogFrontImage = null;
+  els.inputFrontPhoto.value = "";
+  updateDialogImagePreview("front");
+});
+
+els.btnRemoveBackImage.addEventListener("click", () => {
+  dialogBackImage = null;
+  els.inputBackPhoto.value = "";
+  updateDialogImagePreview("back");
+});
 
 els.inputFrontPhoto.addEventListener("change", () => {
   handleDialogImagePick("front", els.inputFrontPhoto.files?.[0]);
