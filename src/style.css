@@ -257,6 +257,73 @@ h2 {
   font-size: 0.9rem;
 }
 
+.setting-picker-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 7.5rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--btn-secondary-bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.setting-picker-btn:hover {
+  background: var(--btn-secondary-hover);
+  border-color: var(--border-strong);
+}
+
+.setting-picker-chevron {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.picker-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.picker-option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--icon-bg);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.picker-option:hover {
+  border-color: var(--border);
+  background: var(--icon-hover-bg);
+}
+
+.picker-option:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--learn-bg);
+  color: var(--learn-text);
+}
+
+.picker-option input {
+  margin: 0;
+  accent-color: var(--primary);
+}
+
 .card-stack {
   list-style: none;
   margin: 0;
@@ -681,9 +748,37 @@ dialog textarea:focus {
   width: 100%;
 }
 
-.btn-small {
-  padding: 0.35rem 0.65rem;
-  font-size: 0.8rem;
+.vocab-dialog {
+  width: min(100vw - 2rem, 400px);
+}
+
+.vocab-field {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.vocab-field-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.vocab-input {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 1rem;
+  background: var(--btn-secondary-bg);
+  color: var(--text);
+}
+
+.vocab-input:focus {
+  outline: 2px solid var(--primary);
+  border-color: transparent;
 }
 
 .vocab-image-field {
@@ -692,12 +787,61 @@ dialog textarea:focus {
 
 .vocab-image-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.vocab-photo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--icon-bg);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+
+.vocab-photo-btn:hover {
+  border-color: var(--primary);
+  background: var(--learn-bg);
+  color: var(--learn-text);
+}
+
+.vocab-photo-remove {
+  border-style: solid;
+  border-color: var(--border-subtle);
+  background: var(--btn-secondary-bg);
+}
+
+.vocab-photo-remove:hover {
+  border-color: var(--danger-text);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.vocab-photo-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
 }
 
 .vocab-image-preview {
   margin-top: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--card-bg-alt);
+  text-align: center;
 }
 
 .vocab-image-preview img,

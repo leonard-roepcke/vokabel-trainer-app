@@ -44,7 +44,13 @@ const els = {
   settingsArea: document.getElementById("settings-area"),
   settingDarkMode: document.getElementById("setting-dark-mode"),
   settingShowListAnswers: document.getElementById("setting-show-list-answers"),
-  settingLanguage: document.getElementById("setting-language"),
+  btnLanguage: document.getElementById("btn-language"),
+  settingLanguageLabel: document.getElementById("setting-language-label"),
+  dialogLanguage: document.getElementById("dialog-language"),
+  languageForm: document.getElementById("language-form"),
+  languageDe: document.getElementById("language-de"),
+  languageEn: document.getElementById("language-en"),
+  cancelLanguage: document.getElementById("cancel-language"),
   listDetail: document.getElementById("list-detail"),
   listsList: document.getElementById("lists-list"),
   listsEmpty: document.getElementById("lists-empty"),
@@ -372,6 +378,22 @@ function showLearnHeader(title) {
   showNavHeader(title, { showDelete: false, editableTitle: false, learnMode: true });
 }
 
+function languageLabel(code) {
+  return code === "en" ? "English" : "Deutsch";
+}
+
+function updateLanguageLabel() {
+  els.settingLanguageLabel.textContent = languageLabel(settings.language);
+  els.languageDe.checked = settings.language === "de";
+  els.languageEn.checked = settings.language === "en";
+}
+
+function openLanguageDialog() {
+  updateLanguageLabel();
+  applyStaticTranslations(els.dialogLanguage);
+  els.dialogLanguage.showModal();
+}
+
 function applySettings() {
   document.documentElement.lang = settings.language;
   document.documentElement.dataset.theme = settings.darkMode ? "dark" : "light";
@@ -379,7 +401,7 @@ function applySettings() {
   document.title = t("appTitle");
   els.settingDarkMode.checked = settings.darkMode;
   els.settingShowListAnswers.checked = settings.showListAnswers;
-  els.settingLanguage.value = settings.language;
+  updateLanguageLabel();
   applyStaticTranslations();
   refreshVisibleUi();
 }
@@ -635,16 +657,12 @@ function openVocabDialog(vocab = null) {
   els.vocabFormError.classList.add("hidden");
 
   if (vocab) {
-    els.vocabDialogTitle.textContent = t("editVocab");
-    els.vocabSubmitBtn.textContent = t("save");
     els.editVocabId.value = vocab.id;
     els.inputFront.value = vocab.front;
     els.inputBack.value = vocab.back;
     setFlipModeRadio(vocab.flipMode);
     resetDialogImages(vocab.frontImage ?? null, vocab.backImage ?? null);
   } else {
-    els.vocabDialogTitle.textContent = t("newVocab");
-    els.vocabSubmitBtn.textContent = t("add");
     els.editVocabId.value = "";
     els.inputFront.value = "";
     els.inputBack.value = "";
@@ -653,6 +671,8 @@ function openVocabDialog(vocab = null) {
   }
 
   applyStaticTranslations(els.dialogVocab);
+  els.vocabDialogTitle.textContent = vocab ? t("editVocab") : t("newVocab");
+  els.vocabSubmitBtn.textContent = vocab ? t("save") : t("add");
   els.dialogVocab.showModal();
   positionDialogForKeyboard(els.dialogVocab);
   els.inputFront.focus();
@@ -1006,10 +1026,17 @@ els.settingShowListAnswers.addEventListener("change", () => {
   if (!els.listDetail.classList.contains("hidden")) renderVocabs();
 });
 
-els.settingLanguage.addEventListener("change", () => {
-  settings.language = els.settingLanguage.value === "en" ? "en" : "de";
+els.btnLanguage.addEventListener("click", openLanguageDialog);
+
+els.cancelLanguage.addEventListener("click", () => els.dialogLanguage.close());
+
+els.languageForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const selected = els.languageForm.querySelector('input[name="language"]:checked');
+  settings.language = selected?.value === "en" ? "en" : "de";
   saveSettings();
   applySettings();
+  els.dialogLanguage.close();
 });
 
 els.btnAddList.addEventListener("click", () => {

@@ -7,6 +7,8 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title>Vokabeltrainer</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
@@ -86,13 +88,15 @@
               <span data-i18n="showListAnswers">Lösungen in Listen anzeigen</span>
               <input type="checkbox" id="setting-show-list-answers" checked />
             </label>
-            <label class="setting-row">
+            <div class="setting-row">
               <span data-i18n="language">Sprache</span>
-              <select id="setting-language">
-                <option value="de">Deutsch</option>
-                <option value="en">English</option>
-              </select>
-            </label>
+              <button type="button" id="btn-language" class="setting-picker-btn" aria-haspopup="dialog">
+                <span id="setting-language-label">Deutsch</span>
+                <svg class="setting-picker-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -177,6 +181,28 @@
       </main>
     </div>
 
+    <dialog id="dialog-language">
+      <form id="language-form" method="dialog">
+        <h2 data-i18n="language">Sprache</h2>
+        <div class="picker-options" role="radiogroup">
+          <label class="picker-option">
+            <input type="radio" name="language" value="de" id="language-de" checked />
+            <span>Deutsch</span>
+          </label>
+          <label class="picker-option">
+            <input type="radio" name="language" value="en" id="language-en" />
+            <span>English</span>
+          </label>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" id="cancel-language" class="btn-secondary" data-i18n="cancel">
+            Abbrechen
+          </button>
+          <button type="submit" class="btn-primary" data-i18n="save">Speichern</button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog id="dialog-share-list">
       <form id="share-list-form" method="dialog">
         <h2 data-i18n="shareListTitle">Liste teilen</h2>
@@ -254,57 +280,81 @@
       </form>
     </dialog>
 
-    <dialog id="dialog-vocab">
+    <dialog id="dialog-vocab" class="vocab-dialog">
       <form id="vocab-form" method="dialog">
-        <h2 id="vocab-dialog-title" data-i18n="newVocab">Neue Vokabel</h2>
+        <h2 id="vocab-dialog-title">Neue Vokabel</h2>
         <input type="hidden" id="edit-vocab-id" value="" />
-        <label>
-          <span data-i18n="front">Vorderseite</span>
+        <label class="vocab-field">
+          <span class="vocab-field-label" data-i18n="front">Vorderseite</span>
           <input
             type="text"
             id="input-front"
+            class="vocab-input"
             data-i18n-placeholder="frontPlaceholder"
             placeholder="z.B. Haus"
           />
           <div class="vocab-image-field">
             <input type="file" id="input-front-image" accept="image/*" class="hidden" />
             <div class="vocab-image-actions">
-              <button type="button" id="btn-front-image" class="btn-secondary btn-small" data-i18n="addPhoto">
-                Foto hinzufügen
+              <button type="button" id="btn-front-image" class="vocab-photo-btn">
+                <svg class="vocab-photo-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"
+                  />
+                </svg>
+                <span data-i18n="addPhoto">Foto hinzufügen</span>
               </button>
               <button
                 type="button"
                 id="btn-remove-front-image"
-                class="btn-secondary btn-small hidden"
-                data-i18n="removePhoto"
+                class="vocab-photo-btn vocab-photo-remove hidden"
               >
-                Foto entfernen
+                <svg class="vocab-photo-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                  />
+                </svg>
+                <span data-i18n="removePhoto">Foto entfernen</span>
               </button>
             </div>
             <div id="preview-front-image" class="vocab-image-preview hidden"></div>
           </div>
         </label>
-        <label>
-          <span data-i18n="back">Rückseite</span>
+        <label class="vocab-field">
+          <span class="vocab-field-label" data-i18n="back">Rückseite</span>
           <input
             type="text"
             id="input-back"
+            class="vocab-input"
             data-i18n-placeholder="backPlaceholder"
             placeholder="z.B. house"
           />
           <div class="vocab-image-field">
             <input type="file" id="input-back-image" accept="image/*" class="hidden" />
             <div class="vocab-image-actions">
-              <button type="button" id="btn-back-image" class="btn-secondary btn-small" data-i18n="addPhoto">
-                Foto hinzufügen
+              <button type="button" id="btn-back-image" class="vocab-photo-btn">
+                <svg class="vocab-photo-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"
+                  />
+                </svg>
+                <span data-i18n="addPhoto">Foto hinzufügen</span>
               </button>
               <button
                 type="button"
                 id="btn-remove-back-image"
-                class="btn-secondary btn-small hidden"
-                data-i18n="removePhoto"
+                class="vocab-photo-btn vocab-photo-remove hidden"
               >
-                Foto entfernen
+                <svg class="vocab-photo-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                  />
+                </svg>
+                <span data-i18n="removePhoto">Foto entfernen</span>
               </button>
             </div>
             <div id="preview-back-image" class="vocab-image-preview hidden"></div>
@@ -332,9 +382,7 @@
           <button type="button" id="cancel-vocab" class="btn-secondary" data-i18n="cancel">
             Abbrechen
           </button>
-          <button type="submit" class="btn-primary" id="vocab-submit-btn" data-i18n="add">
-            Hinzufügen
-          </button>
+          <button type="submit" class="btn-primary" id="vocab-submit-btn">Hinzufügen</button>
         </div>
       </form>
     </dialog>
