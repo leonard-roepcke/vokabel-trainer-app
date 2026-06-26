@@ -814,7 +814,7 @@ dialog textarea:focus {
   flex-shrink: 0;
 }
 
-.vocab-image-has {
+.vocab-image-has:not(.hidden) {
   display: flex;
   align-items: center;
   gap: 0.5rem;
