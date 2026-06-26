@@ -81,13 +81,9 @@ const els = {
   inputFront: document.getElementById("input-front"),
   inputBack: document.getElementById("input-back"),
   inputFrontPhoto: document.getElementById("input-front-photo"),
-  inputFrontFile: document.getElementById("input-front-file"),
   inputBackPhoto: document.getElementById("input-back-photo"),
-  inputBackFile: document.getElementById("input-back-file"),
   btnFrontPhoto: document.getElementById("btn-front-photo"),
-  btnFrontFile: document.getElementById("btn-front-file"),
   btnBackPhoto: document.getElementById("btn-back-photo"),
-  btnBackFile: document.getElementById("btn-back-file"),
   frontImageAdd: document.getElementById("front-image-add"),
   frontImageHas: document.getElementById("front-image-has"),
   backImageAdd: document.getElementById("back-image-add"),
@@ -320,7 +316,6 @@ function getImageSideElements(side) {
     hasBlock: isFront ? els.frontImageHas : els.backImageHas,
     thumb: isFront ? els.thumbFrontImage : els.thumbBackImage,
     photoInput: isFront ? els.inputFrontPhoto : els.inputBackPhoto,
-    fileInput: isFront ? els.inputFrontFile : els.inputBackFile,
   };
 }
 
@@ -333,11 +328,13 @@ function updateDialogImagePreview(side) {
     hasBlock.classList.remove("hidden");
     thumb.src = image;
     thumb.alt = t("photoAlt");
+    thumb.classList.remove("hidden");
   } else {
     addBlock.classList.remove("hidden");
     hasBlock.classList.add("hidden");
     thumb.removeAttribute("src");
     thumb.alt = "";
+    thumb.classList.add("hidden");
   }
 }
 
@@ -345,9 +342,7 @@ function resetDialogImages(frontImage = null, backImage = null) {
   dialogFrontImage = frontImage;
   dialogBackImage = backImage;
   els.inputFrontPhoto.value = "";
-  els.inputFrontFile.value = "";
   els.inputBackPhoto.value = "";
-  els.inputBackFile.value = "";
   updateDialogImagePreview("front");
   updateDialogImagePreview("back");
 }
@@ -1133,21 +1128,17 @@ els.btnShareList.addEventListener("click", () => shareCurrentList());
 els.cancelVocab.addEventListener("click", () => els.dialogVocab.close());
 
 els.btnFrontPhoto.addEventListener("click", () => els.inputFrontPhoto.click());
-els.btnFrontFile.addEventListener("click", () => els.inputFrontFile.click());
 els.btnBackPhoto.addEventListener("click", () => els.inputBackPhoto.click());
-els.btnBackFile.addEventListener("click", () => els.inputBackFile.click());
 
 els.btnRemoveFrontImage.addEventListener("click", () => {
   dialogFrontImage = null;
   els.inputFrontPhoto.value = "";
-  els.inputFrontFile.value = "";
   updateDialogImagePreview("front");
 });
 
 els.btnRemoveBackImage.addEventListener("click", () => {
   dialogBackImage = null;
   els.inputBackPhoto.value = "";
-  els.inputBackFile.value = "";
   updateDialogImagePreview("back");
 });
 
@@ -1155,16 +1146,8 @@ els.inputFrontPhoto.addEventListener("change", () => {
   handleDialogImagePick("front", els.inputFrontPhoto.files?.[0]);
 });
 
-els.inputFrontFile.addEventListener("change", () => {
-  handleDialogImagePick("front", els.inputFrontFile.files?.[0]);
-});
-
 els.inputBackPhoto.addEventListener("change", () => {
   handleDialogImagePick("back", els.inputBackPhoto.files?.[0]);
-});
-
-els.inputBackFile.addEventListener("change", () => {
-  handleDialogImagePick("back", els.inputBackFile.files?.[0]);
 });
 
 els.vocabForm.addEventListener("submit", (e) => {

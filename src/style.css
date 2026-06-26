@@ -785,11 +785,6 @@ dialog textarea:focus {
   margin-top: 0.5rem;
 }
 
-.vocab-image-actions-row {
-  display: flex;
-  gap: 0.4rem;
-}
-
 .vocab-photo-btn {
   display: inline-flex;
   align-items: center;
@@ -808,13 +803,6 @@ dialog textarea:focus {
     border-color 0.15s,
     background 0.15s,
     color 0.15s;
-}
-
-.vocab-photo-btn-half {
-  flex: 1;
-  width: auto;
-  min-width: 0;
-  padding: 0.5rem 0.35rem;
 }
 
 .vocab-photo-btn:hover {
