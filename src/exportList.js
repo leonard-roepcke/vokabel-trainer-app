@@ -57,7 +57,6 @@ export async function shareListJsonFile({ fileName, jsonText, title, t }) {
         }
       }
 
-      window.alert(t("shareFileSaved", { fileName }));
       return;
     } catch {
       window.alert(t("shareFailed"));
@@ -67,5 +66,4 @@ export async function shareListJsonFile({ fileName, jsonText, title, t }) {
 
   const blob = new Blob([jsonText], { type: "application/json" });
   downloadBlob(blob, fileName);
-  window.alert(t("shareFileDownloaded", { fileName }));
 }

@@ -8,6 +8,7 @@ import {
 } from "./i18n.js";
 import { processImageFile } from "./images.js";
 import { shareListJsonFile } from "./exportList.js";
+import { setupImportFileListener } from "./importFile.js";
 
 const STORAGE_KEY = "vokabel-trainer-data";
 const SETTINGS_KEY = "vokabel-trainer-settings";
@@ -57,12 +58,7 @@ const els = {
   dialogShareList: document.getElementById("dialog-share-list"),
   shareListForm: document.getElementById("share-list-form"),
   cancelShareList: document.getElementById("cancel-share-list"),
-  dialogImportList: document.getElementById("dialog-import-list"),
-  importListForm: document.getElementById("import-list-form"),
-  inputImportList: document.getElementById("input-import-list"),
   inputImportFile: document.getElementById("input-import-file"),
-  importError: document.getElementById("import-error"),
-  cancelImportList: document.getElementById("cancel-import-list"),
   dialogAddList: document.getElementById("dialog-add-list"),
   addListForm: document.getElementById("add-list-form"),
   inputListName: document.getElementById("input-list-name"),
@@ -517,6 +513,15 @@ function importListFromText(text) {
   return list;
 }
 
+function handleImportFromText(text) {
+  try {
+    const list = importListFromText(text);
+    openList(list.id);
+  } catch (error) {
+    window.alert(error.message);
+  }
+}
+
 function openShareListDialog() {
   applyStaticTranslations(els.dialogShareList);
   els.dialogShareList.showModal();
@@ -553,17 +558,6 @@ async function shareCurrentList() {
   const includeProgress = await openShareListDialog();
   if (includeProgress === null) return;
   await shareListData(list, includeProgress);
-}
-
-function openImportListDialog() {
-  els.inputImportList.value = "";
-  els.inputImportFile.value = "";
-  els.importError.textContent = "";
-  els.importError.classList.add("hidden");
-  applyStaticTranslations(els.dialogImportList);
-  els.dialogImportList.showModal();
-  positionDialogForKeyboard(els.dialogImportList);
-  els.inputImportFile.focus();
 }
 
 function renameList(id, name) {
@@ -1024,43 +1018,19 @@ els.btnAddList.addEventListener("click", () => {
   els.inputListName.focus();
 });
 
-els.btnImportList.addEventListener("click", openImportListDialog);
-
-els.cancelImportList.addEventListener("click", () => els.dialogImportList.close());
-
-els.importListForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  els.importError.textContent = "";
-  els.importError.classList.add("hidden");
-
-  const text = els.inputImportList.value.trim();
-  if (!text) {
-    els.importError.textContent = t("importInvalidJson");
-    els.importError.classList.remove("hidden");
-    return;
-  }
-
-  try {
-    importListFromText(text);
-    els.dialogImportList.close();
-  } catch (error) {
-    els.importError.textContent = error.message;
-    els.importError.classList.remove("hidden");
-  }
+els.btnImportList.addEventListener("click", () => {
+  els.inputImportFile.value = "";
+  els.inputImportFile.click();
 });
 
 els.inputImportFile.addEventListener("change", async () => {
   const file = els.inputImportFile.files?.[0];
   if (!file) return;
 
-  els.importError.textContent = "";
-  els.importError.classList.add("hidden");
-
   try {
-    els.inputImportList.value = await file.text();
-  } catch {
-    els.importError.textContent = t("importInvalidJson");
-    els.importError.classList.remove("hidden");
+    handleImportFromText(await file.text());
+  } catch (error) {
+    window.alert(error.message);
   }
 });
 
@@ -1206,3 +1176,4 @@ els.btnUnknown.addEventListener("click", () => answerCard(false));
 
 applySettings();
 showListsOverview();
+setupImportFileListener(handleImportFromText);

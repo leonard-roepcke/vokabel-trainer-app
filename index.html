@@ -179,13 +179,7 @@
 
     <dialog id="dialog-share-list">
       <form id="share-list-form" method="dialog">
-        <h2 data-i18n="shareProgressTitle">Lernfortschritt teilen?</h2>
-        <p class="confirm-message" data-i18n="shareProgressMessage">
-          Soll der Lernfortschritt mit in die geteilten Listendaten?
-        </p>
-        <p class="confirm-message" data-i18n="shareJsonNote">
-          Die Liste wird immer als JSON-Datei exportiert (inkl. Fotos).
-        </p>
+        <h2 data-i18n="shareListTitle">Liste teilen</h2>
         <div class="dialog-actions dialog-actions-stack">
           <button type="button" id="cancel-share-list" class="btn-secondary" data-i18n="cancel">
             Abbrechen
@@ -200,37 +194,12 @@
       </form>
     </dialog>
 
-    <dialog id="dialog-import-list">
-      <form id="import-list-form" method="dialog">
-        <h2 data-i18n="importListTitle">Liste importieren</h2>
-        <label>
-          <span data-i18n="importFromFile">JSON-Datei auswählen</span>
-          <input type="file" id="input-import-file" accept=".json,application/json" />
-        </label>
-        <label>
-          <span data-i18n="importOrPaste">oder Listendaten einfügen</span>
-          <textarea
-            id="input-import-list"
-            rows="8"
-            placeholder='{"name":"Englisch","vocabs":[...]}'
-          ></textarea>
-        </label>
-        <p id="import-error" class="dialog-error hidden"></p>
-        <div class="dialog-actions">
-          <button
-            type="button"
-            id="cancel-import-list"
-            class="btn-secondary"
-            data-i18n="cancel"
-          >
-            Abbrechen
-          </button>
-          <button type="submit" class="btn-primary" data-i18n="import">
-            Importieren
-          </button>
-        </div>
-      </form>
-    </dialog>
+    <input
+      type="file"
+      id="input-import-file"
+      accept=".json,application/json"
+      class="hidden"
+    />
 
     <dialog id="dialog-rename-list">
       <form id="rename-list-form" method="dialog">
