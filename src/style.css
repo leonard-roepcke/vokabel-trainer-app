@@ -349,6 +349,34 @@ h2 {
   padding: 0 1rem;
 }
 
+.list-card-clickable {
+  cursor: pointer;
+}
+
+.list-card-clickable:hover {
+  border-color: var(--border-strong);
+}
+
+.learn-text-btn {
+  background: var(--learn-bg);
+  color: var(--learn-text);
+  border-color: transparent;
+}
+
+.learn-text-btn:hover:not(:disabled) {
+  background: var(--learn-hover-bg);
+  color: var(--learn-hover-text);
+}
+
+.learn-text-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.setting-hour-select {
+  min-width: 5.5rem;
+}
+
 .card-body {
   flex: 1;
   min-width: 0;

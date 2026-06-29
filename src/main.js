@@ -9,12 +9,13 @@ import {
 import { processImageFile } from "./images.js";
 import { shareListJsonFile } from "./exportList.js";
 import { setupImportFileListener } from "./importFile.js";
+import { evaluateStreak } from "./streak.js";
+import { updateNotificationSchedule, updateWidgetData } from "./widget.js";
 
 const STORAGE_KEY = "vokabel-trainer-data";
 const SETTINGS_KEY = "vokabel-trainer-settings";
 const OLD_STORAGE_KEY = "vokabel-trainer-vocabs";
 
-const LEARN_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3 1 9l4 2.18V17c0 2.21 3.13 4 7 4s7-1.79 7-4v-5.82L23 9 12 3zm0 2.18L19.35 9 12 12.82 4.65 9 12 5.18zM5 17v-4.73l7 3.82 7-3.82V17c0 1.1-2.62 2-7 2s-7-.9-7-2z"/></svg>`;
 const EDIT_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
 const DELETE_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 const BACK_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>`;
@@ -44,6 +45,9 @@ const els = {
   settingsArea: document.getElementById("settings-area"),
   settingDarkMode: document.getElementById("setting-dark-mode"),
   settingShowListAnswers: document.getElementById("setting-show-list-answers"),
+  settingNotifications: document.getElementById("setting-notifications"),
+  settingNotificationTimeRow: document.getElementById("setting-notification-time-row"),
+  settingNotificationHour: document.getElementById("setting-notification-hour"),
   btnLanguage: document.getElementById("btn-language"),
   settingLanguageLabel: document.getElementById("setting-language-label"),
   dialogLanguage: document.getElementById("dialog-language"),
@@ -116,8 +120,19 @@ const els = {
 
 setHeaderBack();
 els.btnHeaderDeleteList.innerHTML = DELETE_ICON;
-els.btnLearnList.innerHTML = LEARN_ICON;
 els.btnSettings.innerHTML = SETTINGS_ICON;
+
+function populateNotificationHourSelect() {
+  els.settingNotificationHour.innerHTML = "";
+  for (let hour = 0; hour < 24; hour++) {
+    const option = document.createElement("option");
+    option.value = String(hour);
+    option.textContent = `${String(hour).padStart(2, "0")}:00`;
+    els.settingNotificationHour.appendChild(option);
+  }
+}
+
+populateNotificationHourSelect();
 
 function loadSettings() {
   try {
@@ -128,12 +143,25 @@ function loadSettings() {
         darkMode: Boolean(parsed.darkMode),
         showListAnswers: parsed.showListAnswers !== false,
         language: parsed.language === "en" ? "en" : "de",
+        notificationsEnabled: Boolean(parsed.notificationsEnabled),
+        notificationHour:
+          typeof parsed.notificationHour === "number" &&
+          parsed.notificationHour >= 0 &&
+          parsed.notificationHour <= 23
+            ? parsed.notificationHour
+            : 9,
       };
     }
   } catch {
     /* ignore */
   }
-  return { darkMode: false, showListAnswers: true, language: "de" };
+  return {
+    darkMode: false,
+    showListAnswers: true,
+    language: "de",
+    notificationsEnabled: false,
+    notificationHour: 9,
+  };
 }
 
 function saveSettings() {
@@ -255,6 +283,31 @@ function countDueVocabs(list) {
   return list.vocabs.filter(isVocabDue).length;
 }
 
+function countTotalDueVocabs() {
+  return data.lists.reduce((total, list) => total + countDueVocabs(list), 0);
+}
+
+function syncWidgetAndStreak() {
+  const dueCount = countTotalDueVocabs();
+  const streak = evaluateStreak(data.lists, todayDateString(), dueCount);
+  const allComplete = dueCount === 0;
+
+  updateWidgetData({
+    dueCount,
+    streak,
+    allComplete,
+    language: settings.language,
+  });
+
+  updateNotificationSchedule({
+    enabled: settings.notificationsEnabled,
+    hour: settings.notificationHour,
+    dueCount,
+    streak,
+    language: settings.language,
+  });
+}
+
 function normalizeData(parsed) {
   parsed.lists?.forEach((list) => {
     list.vocabs?.forEach(normalizeVocab);
@@ -264,6 +317,7 @@ function normalizeData(parsed) {
 
 function saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  syncWidgetAndStreak();
 }
 
 function getList(id) {
@@ -410,6 +464,12 @@ function openLanguageDialog() {
   els.dialogLanguage.showModal();
 }
 
+function updateNotificationSettingsUi() {
+  els.settingNotifications.checked = settings.notificationsEnabled;
+  els.settingNotificationHour.value = String(settings.notificationHour);
+  els.settingNotificationTimeRow.classList.toggle("hidden", !settings.notificationsEnabled);
+}
+
 function applySettings() {
   document.documentElement.lang = settings.language;
   document.documentElement.dataset.theme = settings.darkMode ? "dark" : "light";
@@ -417,9 +477,11 @@ function applySettings() {
   document.title = t("appTitle");
   els.settingDarkMode.checked = settings.darkMode;
   els.settingShowListAnswers.checked = settings.showListAnswers;
+  updateNotificationSettingsUi();
   updateLanguageLabel();
   applyStaticTranslations();
   refreshVisibleUi();
+  syncWidgetAndStreak();
 }
 
 function refreshVisibleUi() {
@@ -737,15 +799,14 @@ function renderLists() {
 
   data.lists.forEach((list) => {
     const li = document.createElement("li");
-    li.className = "card list-card";
+    li.className = "card list-card list-card-clickable";
     const dueCount = countDueVocabs(list);
-    const learnDisabled = dueCount === 0 ? "disabled" : "";
     const dueLabel =
       dueCount > 0
         ? `<div class="badge-row"><span class="badge">${dueCount} ${escapeHtml(t("due"))}</span></div>`
         : "";
     li.innerHTML = `
-      <div class="card-body list-info">
+      <div class="card-body list-info" data-id="${list.id}">
         <strong>${escapeHtml(list.name)}</strong>
         <div class="list-meta">
           <span>${escapeHtml(vocabCountLabel(list.vocabs.length))}</span>
@@ -753,9 +814,6 @@ function renderLists() {
         </div>
       </div>
       <div class="list-actions">
-        <button type="button" class="icon-btn learn-btn" data-id="${list.id}" aria-label="${escapeHtml(t("learn"))}" ${learnDisabled}>
-          ${LEARN_ICON}
-        </button>
         <button type="button" class="icon-btn edit-btn" data-id="${list.id}" aria-label="${escapeHtml(t("edit"))}">
           ${EDIT_ICON}
         </button>
@@ -772,7 +830,7 @@ function renderVocabs() {
   els.vocabList.innerHTML = "";
   els.vocabsEmpty.classList.toggle("hidden", list.vocabs.length > 0);
   els.btnLearnList.disabled = countDueVocabs(list) === 0;
-  els.btnLearnList.setAttribute("aria-label", t("learn"));
+  els.btnLearnList.textContent = t("learn");
 
   list.vocabs.forEach((vocab) => {
     const li = document.createElement("li");
@@ -1042,6 +1100,19 @@ els.settingShowListAnswers.addEventListener("change", () => {
   if (!els.listDetail.classList.contains("hidden")) renderVocabs();
 });
 
+els.settingNotifications.addEventListener("change", () => {
+  settings.notificationsEnabled = els.settingNotifications.checked;
+  saveSettings();
+  updateNotificationSettingsUi();
+  syncWidgetAndStreak();
+});
+
+els.settingNotificationHour.addEventListener("change", () => {
+  settings.notificationHour = Number(els.settingNotificationHour.value);
+  saveSettings();
+  syncWidgetAndStreak();
+});
+
 els.btnLanguage.addEventListener("click", openLanguageDialog);
 
 els.cancelLanguage.addEventListener("click", () => els.dialogLanguage.close());
@@ -1186,15 +1257,22 @@ els.vocabForm.addEventListener("submit", (e) => {
 });
 
 els.listsList.addEventListener("click", (e) => {
-  const learn = e.target.closest(".learn-btn");
-  if (learn && !learn.disabled) {
-    startLearn(learn.dataset.id);
-    return;
-  }
   const edit = e.target.closest(".edit-btn");
   if (edit) {
     openList(edit.dataset.id);
     return;
+  }
+
+  const listInfo = e.target.closest(".list-info");
+  if (listInfo) {
+    const listId = listInfo.dataset.id;
+    const list = getList(listId);
+    if (!list) return;
+    if (countDueVocabs(list) > 0) {
+      startLearn(listId);
+    } else {
+      openList(listId);
+    }
   }
 });
 

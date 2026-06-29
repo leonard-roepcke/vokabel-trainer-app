@@ -88,6 +88,15 @@
               <span data-i18n="showListAnswers">Lösungen in Listen anzeigen</span>
               <input type="checkbox" id="setting-show-list-answers" checked />
             </label>
+            <label class="setting-row">
+              <span data-i18n="notifications">Benachrichtigungen</span>
+              <input type="checkbox" id="setting-notifications" />
+            </label>
+            <div id="setting-notification-time-row" class="setting-row hidden">
+              <span data-i18n="notificationTime">Uhrzeit</span>
+              <select id="setting-notification-hour" class="setting-hour-select" aria-label="Uhrzeit">
+              </select>
+            </div>
             <div class="setting-row">
               <span data-i18n="language">Sprache</span>
               <button type="button" id="btn-language" class="setting-picker-btn" aria-haspopup="dialog">
@@ -114,10 +123,11 @@
               <button
                 type="button"
                 id="btn-learn-list"
-                class="icon-btn learn-btn"
-                data-i18n-aria="learn"
-                aria-label="Lernen"
-              ></button>
+                class="btn-secondary learn-text-btn"
+                data-i18n="learn"
+              >
+                Lernen
+              </button>
               <button
                 type="button"
                 id="btn-add-vocab"

@@ -4,4 +4,6 @@
     <string name="title_activity_main">Vokabeltrainer</string>
     <string name="package_name">de.vokabeltrainer.app</string>
     <string name="custom_url_scheme">de.vokabeltrainer.app</string>
+    <string name="widget_name">Vokabeltrainer</string>
+    <string name="widget_description">Zeigt fällige Vokabeln oder deine Streak an.</string>
 </resources>
