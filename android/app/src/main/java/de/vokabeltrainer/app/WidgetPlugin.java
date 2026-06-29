@@ -17,41 +17,62 @@ public class WidgetPlugin extends Plugin {
 
     @PluginMethod
     public void updateWidgetData(PluginCall call) {
-        int dueCount = call.getInt("dueCount", 0);
-        int streak = call.getInt("streak", 0);
-        boolean allComplete = call.getBoolean("allComplete", false);
-        String language = call.getString("language", "de");
+        try {
+            int dueCount = call.getInt("dueCount", 0);
+            int streak = call.getInt("streak", 0);
+            boolean allComplete = call.getBoolean("allComplete", false);
+            String language = call.getString("language", "de");
 
-        WidgetDataStore.saveWidgetData(getContext(), dueCount, streak, allComplete, language);
-        VocabWidgetProvider.updateAllWidgets(getContext());
-        call.resolve();
+            WidgetDataStore.saveWidgetData(getContext(), dueCount, streak, allComplete, language);
+            VocabWidgetProvider.updateAllWidgets(getContext());
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("Widget update failed", e);
+        }
     }
 
     @PluginMethod
     public void updateNotificationSchedule(PluginCall call) {
-        boolean enabled = call.getBoolean("enabled", false);
-        int hour = call.getInt("hour", 9);
-        int dueCount = call.getInt("dueCount", 0);
-        String language = call.getString("language", "de");
+        try {
+            boolean enabled = call.getBoolean("enabled", false);
+            int hour = call.getInt("hour", 9);
+            int dueCount = call.getInt("dueCount", 0);
+            String language = call.getString("language", "de");
 
-        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(
-                        getActivity(),
-                        new String[] {Manifest.permission.POST_NOTIFICATIONS},
-                        NOTIFICATION_PERMISSION_CODE);
+            if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requestNotificationPermissionIfNeeded();
             }
+
+            WidgetDataStore.saveNotificationSettings(getContext(), enabled, hour);
+            WidgetDataStore.saveWidgetData(
+                    getContext(),
+                    dueCount,
+                    call.getInt("streak", 0),
+                    dueCount == 0,
+                    language);
+            NotificationScheduler.reschedule(getContext());
+            call.resolve(new JSObject());
+        } catch (Exception e) {
+            call.reject("Notification schedule failed", e);
+        }
+    }
+
+    private void requestNotificationPermissionIfNeeded() {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
+            return;
         }
 
-        WidgetDataStore.saveNotificationSettings(getContext(), enabled, hour);
-        WidgetDataStore.saveWidgetData(
-                getContext(),
-                dueCount,
-                call.getInt("streak", 0),
-                dueCount == 0,
-                language);
-        NotificationScheduler.reschedule(getContext());
-        call.resolve(new JSObject());
+        getBridge()
+                .executeOnMainThread(
+                        () -> {
+                            if (getActivity() == null) {
+                                return;
+                            }
+                            ActivityCompat.requestPermissions(
+                                    getActivity(),
+                                    new String[] {Manifest.permission.POST_NOTIFICATIONS},
+                                    NOTIFICATION_PERMISSION_CODE);
+                        });
     }
 }

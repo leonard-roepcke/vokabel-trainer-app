@@ -9,7 +9,21 @@ const STRINGS = {
     lists: "Listen",
     importList: "Liste importieren",
     addList: "+ Liste",
-    listsEmpty: "Noch keine Listen. Lege eine neue an.",
+    allLearned: "Alle Vokabeln gelernt",
+    addFolder: "+ Ordner",
+    newFolder: "Neuer Ordner",
+    renameFolder: "Ordner umbenennen",
+    folderNamePlaceholder: "z.B. Englisch",
+    folder: "Ordner",
+    noFolder: "Kein Ordner",
+    deleteFolderTitle: "Ordner löschen?",
+    deleteFolderMessage: "„{name}\" wird gelöscht. Die Listen darin bleiben erhalten.",
+    editFolderAria: "Ordner bearbeiten",
+    deleteFolderAria: "Ordner löschen",
+    toggleFolderAria: "Ordner ein- oder ausklappen",
+    listCountOne: "1 Liste",
+    listCountMany: "{count} Listen",
+    listsEmpty: "Noch keine Listen oder Ordner. Lege etwas Neues an.",
     shareList: "Liste teilen",
     addVocab: "+ Vokabel",
     vocabsEmpty: "Noch keine Vokabeln in dieser Liste.",
@@ -84,7 +98,21 @@ const STRINGS = {
     lists: "Lists",
     importList: "Import list",
     addList: "+ List",
-    listsEmpty: "No lists yet. Create a new one.",
+    allLearned: "All vocabulary learned",
+    addFolder: "+ Folder",
+    newFolder: "New folder",
+    renameFolder: "Rename folder",
+    folderNamePlaceholder: "e.g. English",
+    folder: "Folder",
+    noFolder: "No folder",
+    deleteFolderTitle: "Delete folder?",
+    deleteFolderMessage: "\"{name}\" will be deleted. Lists inside will be kept.",
+    editFolderAria: "Edit folder",
+    deleteFolderAria: "Delete folder",
+    toggleFolderAria: "Expand or collapse folder",
+    listCountOne: "1 list",
+    listCountMany: "{count} lists",
+    listsEmpty: "No lists or folders yet. Create something new.",
     shareList: "Share list",
     addVocab: "+ Vocabulary",
     vocabsEmpty: "No vocabulary in this list yet.",
@@ -175,6 +203,10 @@ export function flipLabel(mode) {
 
 export function vocabCountLabel(count) {
   return count === 1 ? t("vocabOne") : t("vocabMany", { count });
+}
+
+export function listCountLabel(count) {
+  return count === 1 ? t("listCountOne") : t("listCountMany", { count });
 }
 
 export function applyStaticTranslations(root = document) {

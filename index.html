@@ -64,6 +64,14 @@
               </button>
               <button
                 type="button"
+                id="btn-add-folder"
+                class="btn-secondary"
+                data-i18n="addFolder"
+              >
+                + Ordner
+              </button>
+              <button
+                type="button"
                 id="btn-add-list"
                 class="btn-primary"
                 data-i18n="addList"
@@ -250,6 +258,10 @@
             placeholder="Listenname"
           />
         </label>
+        <label>
+          <span data-i18n="folder">Ordner</span>
+          <select id="select-rename-list-folder"></select>
+        </label>
         <div class="dialog-actions">
           <button
             type="button"
@@ -279,12 +291,64 @@
             placeholder="z.B. Englisch Unit 3"
           />
         </label>
+        <label>
+          <span data-i18n="folder">Ordner</span>
+          <select id="select-add-list-folder"></select>
+        </label>
         <div class="dialog-actions">
           <button type="button" id="cancel-list" class="btn-secondary" data-i18n="cancel">
             Abbrechen
           </button>
           <button type="submit" class="btn-primary" data-i18n="create">
             Erstellen
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-add-folder">
+      <form id="add-folder-form" method="dialog">
+        <h2 data-i18n="newFolder">Neuer Ordner</h2>
+        <label>
+          <span data-i18n="name">Name</span>
+          <input
+            type="text"
+            id="input-folder-name"
+            required
+            data-i18n-placeholder="folderNamePlaceholder"
+            placeholder="z.B. Englisch"
+          />
+        </label>
+        <div class="dialog-actions">
+          <button type="button" id="cancel-folder" class="btn-secondary" data-i18n="cancel">
+            Abbrechen
+          </button>
+          <button type="submit" class="btn-primary" data-i18n="create">
+            Erstellen
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-rename-folder">
+      <form id="rename-folder-form" method="dialog">
+        <h2 data-i18n="renameFolder">Ordner umbenennen</h2>
+        <label>
+          <span data-i18n="name">Name</span>
+          <input
+            type="text"
+            id="input-rename-folder"
+            required
+            data-i18n-placeholder="folderNamePlaceholder"
+            placeholder="z.B. Englisch"
+          />
+        </label>
+        <div class="dialog-actions">
+          <button type="button" id="cancel-rename-folder" class="btn-secondary" data-i18n="cancel">
+            Abbrechen
+          </button>
+          <button type="submit" class="btn-primary" data-i18n="save">
+            Speichern
           </button>
         </div>
       </form>

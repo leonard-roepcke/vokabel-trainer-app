@@ -5,6 +5,7 @@ import {
   setLanguage,
   t,
   vocabCountLabel,
+  listCountLabel,
 } from "./i18n.js";
 import { processImageFile } from "./images.js";
 import { shareListJsonFile } from "./exportList.js";
@@ -32,6 +33,8 @@ let learnIndex = 0;
 let learnPassedSides = {};
 let dialogFrontImage = null;
 let dialogBackImage = null;
+let collapsedFolders = new Set();
+let editingFolderId = null;
 
 const els = {
   appTitle: document.getElementById("app-title"),
@@ -61,6 +64,7 @@ const els = {
   vocabList: document.getElementById("vocab-list"),
   vocabsEmpty: document.getElementById("vocabs-empty"),
   btnAddList: document.getElementById("btn-add-list"),
+  btnAddFolder: document.getElementById("btn-add-folder"),
   btnImportList: document.getElementById("btn-import-list"),
   btnShareList: document.getElementById("btn-share-list"),
   btnLearnList: document.getElementById("btn-learn-list"),
@@ -72,10 +76,20 @@ const els = {
   dialogAddList: document.getElementById("dialog-add-list"),
   addListForm: document.getElementById("add-list-form"),
   inputListName: document.getElementById("input-list-name"),
+  selectAddListFolder: document.getElementById("select-add-list-folder"),
   cancelList: document.getElementById("cancel-list"),
+  dialogAddFolder: document.getElementById("dialog-add-folder"),
+  addFolderForm: document.getElementById("add-folder-form"),
+  inputFolderName: document.getElementById("input-folder-name"),
+  cancelFolder: document.getElementById("cancel-folder"),
+  dialogRenameFolder: document.getElementById("dialog-rename-folder"),
+  renameFolderForm: document.getElementById("rename-folder-form"),
+  inputRenameFolder: document.getElementById("input-rename-folder"),
+  cancelRenameFolder: document.getElementById("cancel-rename-folder"),
   dialogRenameList: document.getElementById("dialog-rename-list"),
   renameListForm: document.getElementById("rename-list-form"),
   inputRenameList: document.getElementById("input-rename-list"),
+  selectRenameListFolder: document.getElementById("select-rename-list-folder"),
   cancelRenameList: document.getElementById("cancel-rename-list"),
   dialogVocab: document.getElementById("dialog-vocab"),
   vocabForm: document.getElementById("vocab-form"),
@@ -189,14 +203,15 @@ function loadData() {
       }));
       localStorage.removeItem(OLD_STORAGE_KEY);
       return {
-        lists: [{ id: crypto.randomUUID(), name: t("defaultListName"), vocabs }],
+        lists: [{ id: crypto.randomUUID(), name: t("defaultListName"), folderId: null, vocabs }],
+        folders: [],
       };
     }
   } catch {
     /* ignore */
   }
 
-  return { lists: [] };
+  return { lists: [], folders: [] };
 }
 
 function normalizeFlipMode(mode) {
@@ -309,7 +324,18 @@ function syncWidgetAndStreak() {
 }
 
 function normalizeData(parsed) {
+  if (!Array.isArray(parsed.folders)) {
+    parsed.folders = [];
+  }
+
+  const folderIds = new Set(parsed.folders.map((folder) => folder.id));
   parsed.lists?.forEach((list) => {
+    if (list.folderId && !folderIds.has(list.folderId)) {
+      list.folderId = null;
+    }
+    if (list.folderId === undefined) {
+      list.folderId = null;
+    }
     list.vocabs?.forEach(normalizeVocab);
   });
   return parsed;
@@ -322,6 +348,58 @@ function saveData() {
 
 function getList(id) {
   return data.lists.find((l) => l.id === id);
+}
+
+function getFolder(id) {
+  return data.folders.find((folder) => folder.id === id);
+}
+
+function populateFolderSelect(selectEl, selectedId = null) {
+  selectEl.innerHTML = "";
+  const noneOption = document.createElement("option");
+  noneOption.value = "";
+  noneOption.textContent = t("noFolder");
+  selectEl.appendChild(noneOption);
+
+  data.folders.forEach((folder) => {
+    const option = document.createElement("option");
+    option.value = folder.id;
+    option.textContent = folder.name;
+    selectEl.appendChild(option);
+  });
+
+  selectEl.value = selectedId ?? "";
+}
+
+function listStatusBadgeHtml(list) {
+  const dueCount = countDueVocabs(list);
+  if (dueCount > 0) {
+    return `<div class="badge-row"><span class="badge">${dueCount} ${escapeHtml(t("due"))}</span></div>`;
+  }
+  if (list.vocabs.length > 0) {
+    return `<div class="badge-row"><span class="badge badge-success">${escapeHtml(t("allLearned"))}</span></div>`;
+  }
+  return "";
+}
+
+function createListCardElement(list) {
+  const li = document.createElement("li");
+  li.className = "card list-card list-card-clickable";
+  li.innerHTML = `
+    <div class="card-body list-info" data-id="${list.id}">
+      <strong>${escapeHtml(list.name)}</strong>
+      <div class="list-meta">
+        <span>${escapeHtml(vocabCountLabel(list.vocabs.length))}</span>
+        ${listStatusBadgeHtml(list)}
+      </div>
+    </div>
+    <div class="list-actions">
+      <button type="button" class="icon-btn edit-btn" data-id="${list.id}" aria-label="${escapeHtml(t("edit"))}">
+        ${EDIT_ICON}
+      </button>
+    </div>
+  `;
+  return li;
 }
 
 function escapeHtml(text) {
@@ -505,10 +583,24 @@ function openRenameListDialog() {
   if (!list) return;
 
   els.inputRenameList.value = list.name;
+  populateFolderSelect(els.selectRenameListFolder, list.folderId);
   els.dialogRenameList.showModal();
   positionDialogForKeyboard(els.dialogRenameList);
   els.inputRenameList.focus();
   els.inputRenameList.select();
+}
+
+function openRenameFolderDialog(folderId) {
+  const folder = getFolder(folderId);
+  if (!folder) return;
+
+  editingFolderId = folderId;
+  els.inputRenameFolder.value = folder.name;
+  applyStaticTranslations(els.dialogRenameFolder);
+  els.dialogRenameFolder.showModal();
+  positionDialogForKeyboard(els.dialogRenameFolder);
+  els.inputRenameFolder.focus();
+  els.inputRenameFolder.select();
 }
 
 function sanitizeFileName(name) {
@@ -601,6 +693,7 @@ function parseImportedListText(text) {
   return {
     id: crypto.randomUUID(),
     name: String(listData.name).trim(),
+    folderId: null,
     vocabs,
   };
 }
@@ -660,7 +753,7 @@ async function shareCurrentList() {
   await shareListData(list, includeProgress);
 }
 
-function renameList(id, name) {
+function renameList(id, name, folderId = null) {
   const list = getList(id);
   if (!list) return;
 
@@ -668,8 +761,54 @@ function renameList(id, name) {
   if (!trimmed) return;
 
   list.name = trimmed;
+  list.folderId = folderId || null;
   saveData();
   showNavHeader(list.name, { showDelete: true, editableTitle: true });
+  renderLists();
+}
+
+function addFolder(name) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+
+  data.folders.push({
+    id: crypto.randomUUID(),
+    name: trimmed,
+  });
+  saveData();
+  renderLists();
+}
+
+function renameFolder(id, name) {
+  const folder = getFolder(id);
+  if (!folder) return;
+
+  const trimmed = name.trim();
+  if (!trimmed) return;
+
+  folder.name = trimmed;
+  saveData();
+  renderLists();
+}
+
+async function deleteFolder(id) {
+  const folder = getFolder(id);
+  if (!folder) return;
+
+  const confirmed = await openConfirmDialog({
+    title: t("deleteFolderTitle"),
+    message: t("deleteFolderMessage", { name: folder.name }),
+  });
+  if (!confirmed) return;
+
+  data.lists.forEach((list) => {
+    if (list.folderId === id) {
+      list.folderId = null;
+    }
+  });
+  data.folders = data.folders.filter((folder) => folder.id !== id);
+  collapsedFolders.delete(id);
+  saveData();
   renderLists();
 }
 
@@ -795,32 +934,55 @@ function openList(id) {
 
 function renderLists() {
   els.listsList.innerHTML = "";
-  els.listsEmpty.style.display = data.lists.length ? "none" : "block";
+  const hasContent = data.lists.length > 0 || data.folders.length > 0;
+  els.listsEmpty.style.display = hasContent ? "none" : "block";
 
-  data.lists.forEach((list) => {
-    const li = document.createElement("li");
-    li.className = "card list-card list-card-clickable";
-    const dueCount = countDueVocabs(list);
-    const dueLabel =
-      dueCount > 0
-        ? `<div class="badge-row"><span class="badge">${dueCount} ${escapeHtml(t("due"))}</span></div>`
-        : "";
-    li.innerHTML = `
-      <div class="card-body list-info" data-id="${list.id}">
-        <strong>${escapeHtml(list.name)}</strong>
-        <div class="list-meta">
-          <span>${escapeHtml(vocabCountLabel(list.vocabs.length))}</span>
-          ${dueLabel}
-        </div>
-      </div>
+  data.folders.forEach((folder) => {
+    const folderLists = data.lists.filter((list) => list.folderId === folder.id);
+    const isCollapsed = collapsedFolders.has(folder.id);
+    const group = document.createElement("li");
+    group.className = "folder-group";
+
+    const header = document.createElement("div");
+    header.className = "card folder-card";
+    header.innerHTML = `
+      <button
+        type="button"
+        class="folder-toggle"
+        data-id="${folder.id}"
+        aria-expanded="${!isCollapsed}"
+        aria-label="${escapeHtml(t("toggleFolderAria"))}"
+      >
+        <span class="folder-chevron">${isCollapsed ? "▶" : "▼"}</span>
+        <strong>${escapeHtml(folder.name)}</strong>
+        <span class="folder-count">${escapeHtml(listCountLabel(folderLists.length))}</span>
+      </button>
       <div class="list-actions">
-        <button type="button" class="icon-btn edit-btn" data-id="${list.id}" aria-label="${escapeHtml(t("edit"))}">
+        <button type="button" class="icon-btn edit-folder-btn" data-id="${folder.id}" aria-label="${escapeHtml(t("editFolderAria"))}">
           ${EDIT_ICON}
+        </button>
+        <button type="button" class="icon-btn delete-btn delete-folder-btn" data-id="${folder.id}" aria-label="${escapeHtml(t("deleteFolderAria"))}">
+          ${DELETE_ICON}
         </button>
       </div>
     `;
-    els.listsList.appendChild(li);
+    group.appendChild(header);
+
+    const listsContainer = document.createElement("ul");
+    listsContainer.className = `folder-lists${isCollapsed ? " hidden" : ""}`;
+    listsContainer.dataset.folderId = folder.id;
+    folderLists.forEach((list) => {
+      listsContainer.appendChild(createListCardElement(list));
+    });
+    group.appendChild(listsContainer);
+    els.listsList.appendChild(group);
   });
+
+  data.lists
+    .filter((list) => !list.folderId)
+    .forEach((list) => {
+      els.listsList.appendChild(createListCardElement(list));
+    });
 }
 
 function renderVocabs() {
@@ -860,10 +1022,11 @@ function renderVocabs() {
   });
 }
 
-function addList(name) {
+function addList(name, folderId = null) {
   data.lists.push({
     id: crypto.randomUUID(),
     name: name.trim(),
+    folderId: folderId || null,
     vocabs: [],
   });
   saveData();
@@ -1128,8 +1291,17 @@ els.languageForm.addEventListener("submit", (e) => {
 
 els.btnAddList.addEventListener("click", () => {
   els.inputListName.value = "";
+  populateFolderSelect(els.selectAddListFolder);
+  applyStaticTranslations(els.dialogAddList);
   els.dialogAddList.showModal();
   els.inputListName.focus();
+});
+
+els.btnAddFolder.addEventListener("click", () => {
+  els.inputFolderName.value = "";
+  applyStaticTranslations(els.dialogAddFolder);
+  els.dialogAddFolder.showModal();
+  els.inputFolderName.focus();
 });
 
 els.btnImportList.addEventListener("click", () => {
@@ -1152,10 +1324,29 @@ els.cancelShareList.addEventListener("click", () => els.dialogShareList.close())
 
 els.cancelList.addEventListener("click", () => els.dialogAddList.close());
 
+els.cancelFolder.addEventListener("click", () => els.dialogAddFolder.close());
+
+els.cancelRenameFolder.addEventListener("click", () => els.dialogRenameFolder.close());
+
 els.addListForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  addList(els.inputListName.value);
+  const folderId = els.selectAddListFolder.value || null;
+  addList(els.inputListName.value, folderId);
   els.dialogAddList.close();
+});
+
+els.addFolderForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  addFolder(els.inputFolderName.value);
+  els.dialogAddFolder.close();
+});
+
+els.renameFolderForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (!editingFolderId) return;
+  renameFolder(editingFolderId, els.inputRenameFolder.value);
+  editingFolderId = null;
+  els.dialogRenameFolder.close();
 });
 
 els.cancelRenameList.addEventListener("click", () => els.dialogRenameList.close());
@@ -1163,7 +1354,8 @@ els.cancelRenameList.addEventListener("click", () => els.dialogRenameList.close(
 els.renameListForm.addEventListener("submit", (e) => {
   e.preventDefault();
   if (!currentListId) return;
-  renameList(currentListId, els.inputRenameList.value);
+  const folderId = els.selectRenameListFolder.value || null;
+  renameList(currentListId, els.inputRenameList.value, folderId);
   els.dialogRenameList.close();
 });
 
@@ -1257,6 +1449,30 @@ els.vocabForm.addEventListener("submit", (e) => {
 });
 
 els.listsList.addEventListener("click", (e) => {
+  const folderToggle = e.target.closest(".folder-toggle");
+  if (folderToggle) {
+    const folderId = folderToggle.dataset.id;
+    if (collapsedFolders.has(folderId)) {
+      collapsedFolders.delete(folderId);
+    } else {
+      collapsedFolders.add(folderId);
+    }
+    renderLists();
+    return;
+  }
+
+  const editFolder = e.target.closest(".edit-folder-btn");
+  if (editFolder) {
+    openRenameFolderDialog(editFolder.dataset.id);
+    return;
+  }
+
+  const deleteFolderBtn = e.target.closest(".delete-folder-btn");
+  if (deleteFolderBtn) {
+    deleteFolder(deleteFolderBtn.dataset.id);
+    return;
+  }
+
   const edit = e.target.closest(".edit-btn");
   if (edit) {
     openList(edit.dataset.id);

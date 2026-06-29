@@ -31,6 +31,8 @@
   --learn-hover-text: #1e40af;
   --badge-bg: #eff6ff;
   --badge-text: #1d4ed8;
+  --badge-success-bg: #ecfdf5;
+  --badge-success-text: #047857;
   --unknown-bg: #f4f4f5;
   --unknown-text: #3f3f46;
   --unknown-hover-bg: #e4e4e7;
@@ -70,6 +72,8 @@
   --learn-hover-text: #dbeafe;
   --badge-bg: #1e3a8a;
   --badge-text: #bfdbfe;
+  --badge-success-bg: #064e3b;
+  --badge-success-text: #6ee7b7;
   --unknown-bg: #3f3f46;
   --unknown-text: #e4e4e7;
   --unknown-hover-bg: #52525b;
@@ -498,6 +502,72 @@ h2 {
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.badge-success {
+  background: var(--badge-success-bg);
+  color: var(--badge-success-text);
+}
+
+.folder-group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.folder-group + .folder-group,
+.folder-group + .list-card,
+.list-card + .folder-group {
+  margin-top: 0.75rem;
+}
+
+.folder-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0 0.75rem 0 0;
+}
+
+.folder-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 0 0.75rem 1rem;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.folder-chevron {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.folder-count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: normal;
+}
+
+.folder-lists {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0 0 0 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.folder-lists .list-card {
+  margin-top: 0;
 }
 
 .hint {
