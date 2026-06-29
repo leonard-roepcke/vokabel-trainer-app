@@ -970,12 +970,14 @@ function renderLists() {
   els.listsList.innerHTML = "";
   const hasContent = data.lists.length > 0 || data.folders.length > 0;
   els.listsEmpty.style.display = hasContent ? "none" : "block";
+  if (!hasContent) return;
 
   data.folders.forEach((folder) => {
     const folderLists = data.lists.filter((list) => list.folderId === folder.id);
     const isCollapsed = collapsedFolders.has(folder.id);
     const group = document.createElement("div");
-    group.className = "folder-group";
+    group.className = `folder-group drop-zone${isCollapsed ? " folder-group--collapsed" : ""}`;
+    group.dataset.folderId = folder.id;
 
     const header = document.createElement("div");
     header.className = "card folder-card";
@@ -1008,8 +1010,7 @@ function renderLists() {
     group.appendChild(header);
 
     const listsContainer = document.createElement("div");
-    listsContainer.className = `folder-lists drop-zone${isCollapsed ? " folder-lists--collapsed" : ""}${folderLists.length === 0 ? " drop-zone--empty" : ""}`;
-    listsContainer.dataset.folderId = folder.id;
+    listsContainer.className = `folder-lists${isCollapsed ? " folder-lists--collapsed" : ""}`;
     folderLists.forEach((list) => {
       listsContainer.appendChild(createListCardElement(list));
     });
@@ -1018,15 +1019,17 @@ function renderLists() {
   });
 
   const rootLists = data.lists.filter((list) => !list.folderId);
-  if (rootLists.length > 0 || data.folders.length > 0) {
-    const rootContainer = document.createElement("div");
-    rootContainer.className = `root-lists drop-zone${rootLists.length === 0 ? " drop-zone--empty" : ""}`;
-    rootContainer.dataset.folderId = "";
-    rootLists.forEach((list) => {
-      rootContainer.appendChild(createListCardElement(list));
-    });
-    els.listsList.appendChild(rootContainer);
-  }
+  const rootContainer = document.createElement("div");
+  rootContainer.className = "root-drop-area drop-zone";
+  rootContainer.dataset.folderId = "";
+
+  const rootListsInner = document.createElement("div");
+  rootListsInner.className = "root-lists";
+  rootLists.forEach((list) => {
+    rootListsInner.appendChild(createListCardElement(list));
+  });
+  rootContainer.appendChild(rootListsInner);
+  els.listsList.appendChild(rootContainer);
 
   setupListDragAndDrop({
     root: els.listsList,

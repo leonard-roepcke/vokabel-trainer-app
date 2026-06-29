@@ -9,14 +9,23 @@ function clearDropHighlights(root) {
 
 function findDropZoneAt(root, x, y) {
   clearDropHighlights(root);
-  const element = document.elementFromPoint(x, y);
-  if (!element) return null;
 
-  const zone = element.closest(".drop-zone");
-  if (!zone || !root.contains(zone)) return null;
+  const zones = [...root.querySelectorAll(".drop-zone")];
+  const matches = zones
+    .map((zone) => {
+      const rect = zone.getBoundingClientRect();
+      const inside =
+        x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+      return inside ? { zone, area: rect.width * rect.height } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.area - b.area);
 
-  zone.classList.add("drop-target-active");
-  return zone;
+  const match = matches[0]?.zone ?? null;
+  if (match) {
+    match.classList.add("drop-target-active");
+  }
+  return match;
 }
 
 function getFolderIdFromZone(zone) {
@@ -35,11 +44,13 @@ export function setupListDragAndDrop({ root, onMoveList }) {
       if (!activeDragListId) return;
       event.preventDefault();
       event.dataTransfer.dropEffect = "move";
+      clearDropHighlights(root);
       zone.classList.add("drop-target-active");
     });
 
     zone.addEventListener("dragleave", (event) => {
-      if (!zone.contains(event.relatedTarget)) {
+      const related = event.relatedTarget;
+      if (!related || !zone.contains(related)) {
         zone.classList.remove("drop-target-active");
       }
     });
