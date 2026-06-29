@@ -12,12 +12,14 @@ import { shareListJsonFile } from "./exportList.js";
 import { setupImportFileListener } from "./importFile.js";
 import { evaluateStreak } from "./streak.js";
 import { updateNotificationSchedule, updateWidgetData } from "./widget.js";
+import { setupListDragAndDrop } from "./dragDrop.js";
 
 const STORAGE_KEY = "vokabel-trainer-data";
 const SETTINGS_KEY = "vokabel-trainer-settings";
 const OLD_STORAGE_KEY = "vokabel-trainer-vocabs";
 
 const EDIT_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+const DRAG_HANDLE_ICON = `<svg class="icon drag-handle-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm10-14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/></svg>`;
 const DELETE_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 const BACK_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>`;
 const HOME_ICON = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`;
@@ -382,10 +384,30 @@ function listStatusBadgeHtml(list) {
   return "";
 }
 
+function folderStatusBadgeHtml(folderLists) {
+  const dueCount = folderLists.reduce((total, list) => total + countDueVocabs(list), 0);
+  const totalVocabs = folderLists.reduce((total, list) => total + list.vocabs.length, 0);
+
+  if (dueCount > 0) {
+    return `<span class="badge">${dueCount} ${escapeHtml(t("due"))}</span>`;
+  }
+  if (totalVocabs > 0) {
+    return `<span class="badge badge-success">${escapeHtml(t("allLearned"))}</span>`;
+  }
+  return "";
+}
+
 function createListCardElement(list) {
-  const li = document.createElement("li");
-  li.className = "card list-card list-card-clickable";
-  li.innerHTML = `
+  const card = document.createElement("div");
+  card.className = "card list-card list-card-clickable";
+  card.dataset.listId = list.id;
+  card.innerHTML = `
+    <button
+      type="button"
+      class="list-drag-handle"
+      draggable="true"
+      aria-label="${escapeHtml(t("dragHandleAria"))}"
+    >${DRAG_HANDLE_ICON}</button>
     <div class="card-body list-info" data-id="${list.id}">
       <strong>${escapeHtml(list.name)}</strong>
       <div class="list-meta">
@@ -399,7 +421,19 @@ function createListCardElement(list) {
       </button>
     </div>
   `;
-  return li;
+  return card;
+}
+
+function moveListToFolder(listId, folderId) {
+  const list = getList(listId);
+  if (!list) return;
+
+  const normalizedFolderId = folderId || null;
+  if (list.folderId === normalizedFolderId) return;
+
+  list.folderId = normalizedFolderId;
+  saveData();
+  renderLists();
 }
 
 function escapeHtml(text) {
@@ -940,7 +974,7 @@ function renderLists() {
   data.folders.forEach((folder) => {
     const folderLists = data.lists.filter((list) => list.folderId === folder.id);
     const isCollapsed = collapsedFolders.has(folder.id);
-    const group = document.createElement("li");
+    const group = document.createElement("div");
     group.className = "folder-group";
 
     const header = document.createElement("div");
@@ -953,9 +987,14 @@ function renderLists() {
         aria-expanded="${!isCollapsed}"
         aria-label="${escapeHtml(t("toggleFolderAria"))}"
       >
-        <span class="folder-chevron">${isCollapsed ? "▶" : "▼"}</span>
-        <strong>${escapeHtml(folder.name)}</strong>
-        <span class="folder-count">${escapeHtml(listCountLabel(folderLists.length))}</span>
+        <span class="folder-chevron${isCollapsed ? " folder-chevron--collapsed" : ""}">▼</span>
+        <span class="folder-toggle-main">
+          <strong>${escapeHtml(folder.name)}</strong>
+          <span class="folder-meta">
+            <span class="folder-count">${escapeHtml(listCountLabel(folderLists.length))}</span>
+            ${folderStatusBadgeHtml(folderLists)}
+          </span>
+        </span>
       </button>
       <div class="list-actions">
         <button type="button" class="icon-btn edit-folder-btn" data-id="${folder.id}" aria-label="${escapeHtml(t("editFolderAria"))}">
@@ -968,8 +1007,8 @@ function renderLists() {
     `;
     group.appendChild(header);
 
-    const listsContainer = document.createElement("ul");
-    listsContainer.className = `folder-lists${isCollapsed ? " hidden" : ""}`;
+    const listsContainer = document.createElement("div");
+    listsContainer.className = `folder-lists drop-zone${isCollapsed ? " folder-lists--collapsed" : ""}${folderLists.length === 0 ? " drop-zone--empty" : ""}`;
     listsContainer.dataset.folderId = folder.id;
     folderLists.forEach((list) => {
       listsContainer.appendChild(createListCardElement(list));
@@ -978,11 +1017,21 @@ function renderLists() {
     els.listsList.appendChild(group);
   });
 
-  data.lists
-    .filter((list) => !list.folderId)
-    .forEach((list) => {
-      els.listsList.appendChild(createListCardElement(list));
+  const rootLists = data.lists.filter((list) => !list.folderId);
+  if (rootLists.length > 0 || data.folders.length > 0) {
+    const rootContainer = document.createElement("div");
+    rootContainer.className = `root-lists drop-zone${rootLists.length === 0 ? " drop-zone--empty" : ""}`;
+    rootContainer.dataset.folderId = "";
+    rootLists.forEach((list) => {
+      rootContainer.appendChild(createListCardElement(list));
     });
+    els.listsList.appendChild(rootContainer);
+  }
+
+  setupListDragAndDrop({
+    root: els.listsList,
+    onMoveList: moveListToFolder,
+  });
 }
 
 function renderVocabs() {

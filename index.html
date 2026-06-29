@@ -57,7 +57,7 @@
               <button
                 type="button"
                 id="btn-import-list"
-                class="btn-secondary"
+                class="btn-secondary btn-toolbar"
                 data-i18n="importList"
               >
                 Liste importieren
@@ -65,7 +65,7 @@
               <button
                 type="button"
                 id="btn-add-folder"
-                class="btn-secondary"
+                class="btn-secondary btn-toolbar"
                 data-i18n="addFolder"
               >
                 + Ordner
@@ -73,14 +73,14 @@
               <button
                 type="button"
                 id="btn-add-list"
-                class="btn-primary"
+                class="btn-primary btn-toolbar"
                 data-i18n="addList"
               >
                 + Liste
               </button>
             </div>
           </div>
-          <ul id="lists-list" class="card-stack"></ul>
+          <div id="lists-list" class="card-stack"></div>
           <p id="lists-empty" class="hint" data-i18n="listsEmpty">
             Noch keine Listen. Lege eine neue an.
           </p>
@@ -248,19 +248,20 @@
     <dialog id="dialog-rename-list">
       <form id="rename-list-form" method="dialog">
         <h2 data-i18n="renameList">Liste umbenennen</h2>
-        <label>
-          <span data-i18n="name">Name</span>
+        <label class="dialog-field">
+          <span class="dialog-field-label" data-i18n="name">Name</span>
           <input
             type="text"
             id="input-rename-list"
+            class="dialog-input"
             required
             data-i18n-placeholder="name"
             placeholder="Listenname"
           />
         </label>
-        <label>
-          <span data-i18n="folder">Ordner</span>
-          <select id="select-rename-list-folder"></select>
+        <label class="dialog-field">
+          <span class="dialog-field-label" data-i18n="folder">Ordner</span>
+          <select id="select-rename-list-folder" class="dialog-select"></select>
         </label>
         <div class="dialog-actions">
           <button
@@ -281,19 +282,20 @@
     <dialog id="dialog-add-list">
       <form id="add-list-form" method="dialog">
         <h2 data-i18n="newList">Neue Liste</h2>
-        <label>
-          <span data-i18n="name">Name</span>
+        <label class="dialog-field">
+          <span class="dialog-field-label" data-i18n="name">Name</span>
           <input
             type="text"
             id="input-list-name"
+            class="dialog-input"
             required
             data-i18n-placeholder="listNamePlaceholder"
             placeholder="z.B. Englisch Unit 3"
           />
         </label>
-        <label>
-          <span data-i18n="folder">Ordner</span>
-          <select id="select-add-list-folder"></select>
+        <label class="dialog-field">
+          <span class="dialog-field-label" data-i18n="folder">Ordner</span>
+          <select id="select-add-list-folder" class="dialog-select"></select>
         </label>
         <div class="dialog-actions">
           <button type="button" id="cancel-list" class="btn-secondary" data-i18n="cancel">
