@@ -424,14 +424,40 @@ function createListCardElement(list) {
   return card;
 }
 
-function moveListToFolder(listId, folderId) {
+function moveListToFolder(listId, folderId, { beforeListId = null, afterListId = null } = {}) {
   const list = getList(listId);
   if (!list) return;
 
   const normalizedFolderId = folderId || null;
-  if (list.folderId === normalizedFolderId) return;
+  if (beforeListId === listId || afterListId === listId) return;
 
-  list.folderId = normalizedFolderId;
+  const fromIndex = data.lists.findIndex((entry) => entry.id === listId);
+  if (fromIndex === -1) return;
+
+  let targetIndex;
+  if (beforeListId) {
+    targetIndex = data.lists.findIndex((entry) => entry.id === beforeListId);
+    if (targetIndex === -1) targetIndex = data.lists.length;
+  } else if (afterListId) {
+    targetIndex = data.lists.findIndex((entry) => entry.id === afterListId);
+    if (targetIndex === -1) targetIndex = data.lists.length;
+    else targetIndex += 1;
+  } else {
+    targetIndex = data.lists.length;
+    for (let i = data.lists.length - 1; i >= 0; i--) {
+      if (data.lists[i].folderId === normalizedFolderId && data.lists[i].id !== listId) {
+        targetIndex = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (fromIndex < targetIndex) targetIndex -= 1;
+  if (list.folderId === normalizedFolderId && targetIndex === fromIndex) return;
+
+  const [moved] = data.lists.splice(fromIndex, 1);
+  moved.folderId = normalizedFolderId;
+  data.lists.splice(targetIndex, 0, moved);
   saveData();
   renderLists();
 }
@@ -970,12 +996,14 @@ function renderLists() {
   els.listsList.innerHTML = "";
   const hasContent = data.lists.length > 0 || data.folders.length > 0;
   els.listsEmpty.style.display = hasContent ? "none" : "block";
+  if (!hasContent) return;
 
   data.folders.forEach((folder) => {
     const folderLists = data.lists.filter((list) => list.folderId === folder.id);
     const isCollapsed = collapsedFolders.has(folder.id);
     const group = document.createElement("div");
-    group.className = "folder-group";
+    group.className = `folder-group drop-zone${isCollapsed ? " folder-group--collapsed" : ""}`;
+    group.dataset.folderId = folder.id;
 
     const header = document.createElement("div");
     header.className = "card folder-card";
@@ -1008,8 +1036,7 @@ function renderLists() {
     group.appendChild(header);
 
     const listsContainer = document.createElement("div");
-    listsContainer.className = `folder-lists drop-zone${isCollapsed ? " folder-lists--collapsed" : ""}${folderLists.length === 0 ? " drop-zone--empty" : ""}`;
-    listsContainer.dataset.folderId = folder.id;
+    listsContainer.className = `folder-lists${isCollapsed ? " folder-lists--collapsed" : ""}`;
     folderLists.forEach((list) => {
       listsContainer.appendChild(createListCardElement(list));
     });
@@ -1018,15 +1045,17 @@ function renderLists() {
   });
 
   const rootLists = data.lists.filter((list) => !list.folderId);
-  if (rootLists.length > 0 || data.folders.length > 0) {
-    const rootContainer = document.createElement("div");
-    rootContainer.className = `root-lists drop-zone${rootLists.length === 0 ? " drop-zone--empty" : ""}`;
-    rootContainer.dataset.folderId = "";
-    rootLists.forEach((list) => {
-      rootContainer.appendChild(createListCardElement(list));
-    });
-    els.listsList.appendChild(rootContainer);
-  }
+  const rootContainer = document.createElement("div");
+  rootContainer.className = "root-drop-area drop-zone";
+  rootContainer.dataset.folderId = "";
+
+  const rootListsInner = document.createElement("div");
+  rootListsInner.className = "root-lists";
+  rootLists.forEach((list) => {
+    rootListsInner.appendChild(createListCardElement(list));
+  });
+  rootContainer.appendChild(rootListsInner);
+  els.listsList.appendChild(rootContainer);
 
   setupListDragAndDrop({
     root: els.listsList,

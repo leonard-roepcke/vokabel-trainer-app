@@ -190,6 +190,21 @@ h2 {
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.lists-overview {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 7.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+}
+
+.lists-drop-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
 }
 
 .section-header-actions {
@@ -537,6 +552,33 @@ h2 {
   list-style: none;
   margin: 0;
   padding: 0;
+  border-radius: var(--card-radius);
+  transition:
+    background 0.15s ease,
+    outline-color 0.15s ease;
+}
+
+.folder-group.drop-zone {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+.folder-group.drop-target-active {
+  background: var(--learn-bg);
+  outline: 2px dashed var(--primary);
+  outline-offset: 2px;
+}
+
+.folder-group--collapsed .folder-lists {
+  display: none;
+}
+
+.folder-group--collapsed.drop-target-active {
+  min-height: 3.25rem;
 }
 
 .folder-group + .folder-group,
@@ -552,6 +594,9 @@ h2 {
   gap: 0.75rem;
   min-height: 3.25rem;
   padding: 0 0.75rem 0 0;
+  box-shadow: none;
+  background: transparent;
+  border-radius: 0;
 }
 
 .folder-toggle {
@@ -608,8 +653,8 @@ h2 {
 }
 
 .folder-lists {
-  margin: 0.5rem 0 0;
-  padding: 0 0 0 0.75rem;
+  margin: 0;
+  padding: 0 0 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -619,21 +664,20 @@ h2 {
   display: none;
 }
 
-.folder-lists.drop-zone,
-.root-lists.drop-zone {
-  min-height: 0.5rem;
-  border-radius: 12px;
+.root-drop-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 6rem;
+  margin-top: 0.25rem;
+  padding: 0.75rem;
+  border-radius: var(--card-radius);
   transition:
     background 0.15s ease,
     outline-color 0.15s ease;
 }
 
-.folder-lists.drop-zone--empty,
-.root-lists.drop-zone--empty {
-  min-height: 2.75rem;
-}
-
-.drop-zone.drop-target-active {
+.root-drop-area.drop-target-active {
   background: var(--learn-bg);
   outline: 2px dashed var(--primary);
   outline-offset: 2px;
@@ -649,6 +693,15 @@ h2 {
 
 .list-card.is-dragging {
   opacity: 0.45;
+  pointer-events: none;
+}
+
+.list-card.drop-insert-before {
+  box-shadow: inset 0 3px 0 var(--primary);
+}
+
+.list-card.drop-insert-after {
+  box-shadow: inset 0 -3px 0 var(--primary);
 }
 
 .list-drag-handle {
