@@ -201,6 +201,10 @@ h2 {
   -webkit-user-select: none;
 }
 
+.lists-overview.hidden {
+  display: none;
+}
+
 .lists-drop-layout {
   flex: 1;
   display: flex;
