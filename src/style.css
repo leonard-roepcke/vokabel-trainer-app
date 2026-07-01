@@ -193,16 +193,23 @@ h2 {
   flex-shrink: 0;
 }
 
-.lists-overview {
+.app-view {
   display: flex;
   flex-direction: column;
   min-height: calc(100dvh - 7.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+}
+
+.app-view.hidden {
+  display: none;
+}
+
+.lists-overview {
   user-select: none;
   -webkit-user-select: none;
 }
 
-.lists-overview.hidden {
-  display: none;
+.learn-area {
+  justify-content: center;
 }
 
 .lists-drop-layout {
